@@ -279,6 +279,8 @@ view.addEventListener("click", (e) => {
   if (door) return showDrawer(CANVAS.set(door.dataset.set));
   const log = e.target.closest("[data-log]");
   if (log) return showDrawer(CANVAS.log(log.dataset.log));
+  const rn = e.target.closest("[data-renewal]");
+  if (rn) return showDrawer(CANVAS.renewal(rn.dataset.renewal));
 
   const pick = e.target.closest("[data-pick]");
   if (pick) {

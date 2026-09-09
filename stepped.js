@@ -1,5 +1,6 @@
 import { ACCOUNTS, SETS, count, pct } from "./cohort.js";
 import { LOGS, BLIND_RUNS } from "./logs.js";
+import { RENEWALS, TOTAL, INSIDE_90, FALLING, money } from "./renewals.js";
 
 /* The stepped view: assignment → subjects → the work.
 
@@ -433,6 +434,92 @@ CANVAS.set = (key) => {
 };
 
 
+/* RENEWALS WITH NO SPONSOR — which accounts, and enough about each to
+   decide which one Thursday goes on. The order is stated and derived:
+   value over the weeks left before the notice window shuts. */
+
+const TREND = { rising: "↑", falling: "↓", flat: "→", stalled: "→" };
+
+CANVAS.renewals = () => `
+  <div class="canvas-head">
+    <div>
+      <h2>Where we have no exec sponsor before renewal</h2>
+      <p class="canvas-meta">Rebuilt every Monday · nothing saved, no new object created · +2 in, −1 out this week</p>
+    </div>
+  </div>
+
+  <div class="rn-summary">
+    <div><span class="rn-n">${money(TOTAL)}</span><span class="rn-l">renews with nobody senior named</span></div>
+    <div><span class="rn-n">${INSIDE_90}</span><span class="rn-l">are inside 90 days of their notice window</span></div>
+    <div><span class="rn-n">${FALLING}</span><span class="rn-l">have usage falling as well</span></div>
+    <p class="rn-say">Ordered by what you lose over the time left to save it — value divided by the weeks before notice. Halcyon is £28k a week; Pike &amp; Rowe is £2k.</p>
+  </div>
+
+  <div class="table rn-table">
+    <div class="row head">
+      <span>Account</span><span>Value</span><span>Notice shuts</span><span>Who replies</span>
+      <span>Contacts</span><span>Usage</span><span>Why they're thin</span><span></span>
+    </div>
+    ${RENEWALS.map(
+      (r) => `
+      <div class="row item rn" data-renewal="${r.account}">
+        <span class="rn-acct">${r.account}<em>${r.owner}</em></span>
+        <span class="rn-val">${r.valueLabel}<em>${money(r.exposure)}/wk</em></span>
+        <span class="rn-when">${r.noticeLabel}<em>${r.daysToNotice} days</em></span>
+        <span class="rn-who">${r.replies}<em>${r.repliesRole} · last replied ${r.lastReply}</em></span>
+        <span class="rn-contacts">${r.engaged} of ${r.known}<em>reply to anything</em></span>
+        <span class="rn-usage ${r.usage}">${TREND[r.usage]} ${r.usage}<em>${r.usageNote}</em></span>
+        <span class="rn-why">${r.sponsor}</span>
+        <span class="rn-go"><button class="btn sm" type="button" data-renewal-open="${r.account}">Look</button></span>
+      </div>`,
+    ).join("")}
+  </div>
+
+  <p class="canvas-after">A judgement I made: someone counts as a live contact only if they have replied in the last 90 days. HubSpot lists 4 more at Halcyon; none has ever answered, so I left them out. Count them and this drops to 3 accounts.</p>`;
+
+/* One account, in the drawer: the behaviour behind the row. */
+CANVAS.renewal = (name) => {
+  const r = RENEWALS.find((x) => x.account === name);
+  return `
+    <header>
+      <div>
+        <h2>${r.account}</h2>
+        <p>${r.valueLabel} · renews ${r.renewsLabel} · notice shuts ${r.noticeLabel}, ${r.daysToNotice} days away · ${r.owner}</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body">
+      <h3>What happened to the sponsor</h3>
+      <p class="rn-p">${r.sponsor}</p>
+
+      <h3>Who is left</h3>
+      <p class="rn-p"><strong>${r.replies}</strong>, ${r.repliesRole} — last replied ${r.lastReply}. ${r.engaged} of ${r.known} named contacts have replied to anything in 90 days.</p>
+
+      <h3>How the account is behaving</h3>
+      <div class="table set-table rn-behaviour" style="--set-cols:170px 74px 84px 1fr">
+        <div class="row head"><span>Marker</span><span>Them</span><span>Normal</span><span>What we can see</span></div>
+        ${r.behaviour
+          .map(
+            (b) => `<div class="row item">
+              <span>${b[0]}</span>
+              <span class="rn-figure ${b[3]}">${TREND[b[3]]} ${b[1]}</span>
+              <span class="q">${b[2]}</span>
+              <span>${b[4]}</span>
+            </div>`,
+          )
+          .join("")}
+      </div>
+
+      <h3>Already in flight</h3>
+      <p class="rn-p">${r.inFlight}</p>
+
+      <h3>What this looks like to me</h3>
+      <p class="rn-p verdict-p">${r.verdict}</p>
+    </div>`;
+};
+
 /* A BATCH OF DRAFTS — Trig has written them; a person decides which go.
    Trig does not send: the bulk action puts the chosen ones into the
    owner's Gmail, and sending happens there. Nothing here composes. */
@@ -684,22 +771,7 @@ export const RUNS = {
 
   /* ---- GRID — collapses to one table ------------------------------------ */
 
-  "Confirm exec sponsor involvement before renewal": { layout: "grid", run: "Monday 8 Sep, 6:40 am", single: {
-    shape: "grid", name: "Where we have no exec sponsor before renewal",
-    meta: "Rebuilt every Monday · nothing saved, no new object created · +2 in, −1 out this week",
-    widths: "150px 88px 1fr 300px",
-    collapseNote: true,
-    cols: ["Account", "Renews", "Who we hear from", "What that leaves them without"],
-    rows: [
-      ["Halcyon", "12 Nov", "Ruth Ellery only", "No exec sponsor, 96 days into a stage that clears in 45"],
-      ["Ferrovia", "3 Dec", "Marc Oyelaran only", "6 contacts in HubSpot, 1 has ever replied to anything"],
-      ["Kestrel Group", "19 Dec", "Jo Bergström only", "Both admins left on 12 August, neither replaced since"],
-      ["Talia Foods", "14 Jan", "Priya Shah only", "Sponsor named in March, gone in June, nobody named since"],
-      ["Ardent Rail", "2 Feb", "Sam Idowu only", "7 named contacts, only Sam has opened anything since May"],
-      ["Lowen & Bray", "20 Feb", "Nina Cardoso only", "No sponsor 5 months out; the last 2 that renewed had one by now"],
-      ["Pike & Rowe", "3 Mar", "Ben Achebe only", "2 contacts in total, against a median of 5 for accounts this size"],
-    ],
-    judgement: "A judgement I made: someone counts as a live contact only if they have replied in the last 90 days. HubSpot lists 4 more at Halcyon; none has ever answered, so I left them out. Count them and this drops to 3." } },
+  "Confirm exec sponsor involvement before renewal": { layout: "grid", run: "Monday 8 Sep, 6:40 am", single: { shape: "renewals" } },
 
   "Book meetings with the people we're missing": { layout: "drafts", run: "Today, 6:41 am · 14 drafted", noun: "Deals",
     single: {

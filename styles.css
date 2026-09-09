@@ -965,3 +965,42 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .ag-w { display: block; font-size: var(--t-md); line-height: var(--lh-md); }
 .ag-y { display: block; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); margin-top: 2px; }
 .pack-leave { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
+
+/* ------------------------------------------------- renewals with no sponsor
+   Which accounts, and enough about each to choose between them. */
+
+.rn-summary {
+  display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 32px; align-items: baseline;
+  background: var(--panel2); border: 1px solid var(--edge); border-radius: var(--r-md);
+  padding: 15px 18px; margin: 18px 0 16px;
+}
+.rn-n { display: block; font-size: var(--t-lg); font-weight: 500; font-variant-numeric: tabular-nums; }
+.rn-l { display: block; font-size: var(--t-xs); color: var(--ink-3); }
+.rn-say { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
+
+.rn-table { padding: 0; }
+.rn-table .row {
+  grid-template-columns: 130px 92px 96px 168px 84px 140px 1fr 62px;
+  gap: 16px; align-items: start;
+}
+.rn-table .row.item { padding: 12px 14px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.rn-table .row.item:hover { background: var(--panel2); }
+.rn-table em { display: block; font-style: normal; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); margin-top: 2px; }
+.rn-acct { font-size: var(--t-md); font-weight: 500; }
+.rn-val, .rn-when, .rn-contacts { font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.rn-who, .rn-why { font-size: var(--t-sm); line-height: var(--lh-sm); }
+.rn-usage { font-size: var(--t-sm); }
+.rn-usage.falling { color: #ba4325; }
+.rn-usage.rising { color: #077764; }
+.rn-usage em { color: var(--ink-3); }
+.rn-go { display: flex; justify-content: flex-end; }
+
+/* the account, in the drawer */
+.rn-p { margin: 0 0 4px; font-size: var(--t-sm); line-height: var(--lh-sm); }
+.rn-p strong { font-weight: 500; }
+.verdict-p { background: var(--panel2); border: 1px solid var(--edge); border-radius: var(--r-md); padding: 12px 14px; }
+.rn-behaviour .row { align-items: baseline; }
+.rn-behaviour .row.item { padding: 8px 12px; font-size: var(--t-sm); line-height: var(--lh-sm); }
+.rn-figure { font-variant-numeric: tabular-nums; }
+.rn-figure.falling { color: #ba4325; }
+.rn-figure.rising { color: #077764; }
