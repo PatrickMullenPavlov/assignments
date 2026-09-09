@@ -63,12 +63,12 @@ const ASSIGNMENTS = [
   {
     name: "Book meetings with the people we're missing",
     perRep: { Lazlo: "6 deals", Mia: "5 deals", "Cabbage Mick": "4 deals", Yan: "4 deals", Kish: "4 deals" }, needsPerRep: { Lazlo: "5", Mia: "4", "Cabbage Mick": "2", Yan: "2", Kish: "1" },
-    cadence: "Weekly · on approval",
-    lands: "Slack, on approval",
+    cadence: "Weekly",
+    lands: "Drafts, into your Gmail",
     covers: "23 deals",
     needs: "14",
     verdict: "Working",
-    evidence: "38 meetings booked from 62 asks. Deals it touched reach 4 contacts, against 2 for the rest.",
+    evidence: "38 meetings booked from 62 asks sent. Deals it touched reach 4 contacts, against 2 for the rest.",
     state: "good",
   },
   {
@@ -284,4 +284,32 @@ view.addEventListener("click", (e) => {
   if (item) { openItem = item.dataset.item; return stepped(openAssignment); }
   const row = e.target.closest(".row.item.asg");
   if (row) stepped(row.dataset.name);
+});
+
+
+/* Selection in a batch of drafts. The count in the bar and the count on
+   the button are the same number, always. */
+view.addEventListener("change", (e) => {
+  const bar = view.querySelector("[data-bulk]");
+  if (!bar) return;
+  const boxes = [...view.querySelectorAll("[data-row]")];
+  if (e.target.matches("[data-all]")) boxes.forEach((b) => (b.checked = e.target.checked));
+
+  const n = boxes.filter((b) => b.checked).length;
+  view.querySelector("[data-count]").textContent = String(n);
+  view.querySelector("[data-count2]").textContent = String(n);
+  const all = view.querySelector("[data-all]");
+  all.checked = n === boxes.length;
+  all.indeterminate = n > 0 && n < boxes.length;
+  view.querySelector("[data-place]").disabled = n === 0;
+  boxes.forEach((b) => b.closest(".draft").toggleAttribute("data-off", !b.checked));
+});
+
+/* Read expands the draft in place. It never removes anything. */
+view.addEventListener("click", (e) => {
+  const read = e.target.closest("[data-read]");
+  if (!read) return;
+  const row = read.closest(".draft");
+  const open = row.toggleAttribute("data-open");
+  read.textContent = open ? "Close" : "Read";
 });

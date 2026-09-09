@@ -66,10 +66,14 @@ CANVAS.sequence = (it) => `
 CANVAS.grid = (it) => `
   <h2>${it.name}</h2>
   <p class="canvas-meta">${it.meta}</p>
-  <div class="collapse-note">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-    This run made <strong>one thing</strong>, and it is about all ${it.rows.length} at once. There is nothing to pick between, so the subject column steps out of the way.
-  </div>
+  ${
+    it.collapseNote
+      ? `<div class="collapse-note">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+           This run made <strong>one thing</strong>, and it is about all ${it.rows.length} at once. There is nothing to pick between, so the subject column steps out of the way.
+         </div>`
+      : ""
+  }
   <div class="canvas-body wide">
     ${it.bulk ? `<div class="bulk">${it.bulk}</div>` : ""}
     <div class="table set-table" style="--set-cols:${it.widths}">
@@ -274,6 +278,51 @@ CANVAS.report = (it) => `
     </div>
   </div>`;
 
+/* A BATCH OF DRAFTS — Trig has written them; a person decides which go.
+   Trig does not send: the bulk action puts the chosen ones into the
+   owner's Gmail, and sending happens there. Nothing here composes. */
+
+CANVAS.drafts = (it) => `
+  <div class="canvas-head">
+    <div>
+      <h2>${it.name}</h2>
+      <p class="canvas-meta">${it.meta}</p>
+    </div>
+  </div>
+
+  <div class="bulkbar" data-bulk>
+    <label class="cb all"><input type="checkbox" data-all checked><span></span></label>
+    <span class="bulk-count"><strong data-count>12</strong> of ${it.rows.length} selected</span>
+    <span class="bulk-note">The ${it.rows.filter((r) => r.flag).length} flagged below start unticked.</span>
+    <button class="btn primary" type="button" data-place>Put <span data-count2>12</span> in my Gmail</button>
+  </div>
+
+  <div class="table drafts-table">
+    <div class="row head">
+      <span></span><span>Deal</span><span>What fired</span><span>Who it goes to, and how it opens</span><span></span>
+    </div>
+    ${it.rows
+      .map(
+        (r, i) => `
+      <div class="row item draft${r.flag ? " flagged" : ""}" data-draft="${i}">
+        <label class="cb"><input type="checkbox" data-row${r.flag ? "" : " checked"}><span></span></label>
+        <span class="d-deal">${r.deal}</span>
+        <span class="d-fired">${r.fired}</span>
+        <span class="d-who">
+          <span class="d-open">${r.who} — &ldquo;${r.opens}&rdquo;</span>
+          ${r.flag ? `<span class="d-flag">${r.flag}</span>` : ""}
+          <span class="d-full">${r.body}</span>
+        </span>
+        <span class="d-act">
+          <button class="btn sm" type="button" data-read="${i}">Read</button>
+        </span>
+      </div>`,
+      )
+      .join("")}
+  </div>
+
+  <p class="canvas-after">${it.after}</p>`;
+
 /* A run that produced nothing. Not a layout — a STATE any layout can be
    in, so it renders above whatever the layout would have shown.         */
 CANVAS.nothing = (it) => `
@@ -367,6 +416,7 @@ export const RUNS = {
     shape: "grid", name: "Where we have no exec sponsor before renewal",
     meta: "Rebuilt every Monday · nothing saved, no new object created · +2 in, −1 out this week",
     widths: "150px 88px 1fr 300px",
+    collapseNote: true,
     cols: ["Account", "Renews", "Who we hear from", "What that leaves them without"],
     rows: [
       ["Halcyon", "12 Nov", "Ruth Ellery only", "No exec sponsor, 96 days into a stage that clears in 45"],
@@ -379,22 +429,29 @@ export const RUNS = {
     ],
     judgement: "A judgement I made: someone counts as a live contact only if they have replied in the last 90 days. HubSpot lists 4 more at Halcyon; none has ever answered, so I left them out. Count them and this drops to 3." } },
 
-  "Book meetings with the people we're missing": { layout: "grid", run: "Today, 6:41 am · 14 waiting", single: {
-    shape: "grid", name: "Meeting asks waiting on you",
-    meta: "Today, 6:41 am · 14 drafted, 12 routine and 2 I would read first",
-    bulk: "<strong>12 selected</strong> — the routine ones. The 2 flagged below are unticked. <button class=\"btn primary sm\" type=\"button\">Send these 12</button><button class=\"btn sm\" type=\"button\">Select all 14</button>",
-    widths: "146px 132px 1fr 128px",
-    cols: ["Deal", "What fired", "Who it goes to, and how it opens", ""],
-    rows: [
-      ["Brightsea", "Funding round", "Ana Rehn, VP Ops — “Congratulations on the Series B — usually means the ops team is about to double.”", "Send"],
-      ["Corvus", "Job change", "Marta Lind, Head of Data — “Saw you've moved into the data role. Worth 20 minutes?”", "Send"],
-      ["Pike &amp; Rowe", "Hired a role", "Ben Achebe, CTO — “You're hiring two analytics engineers.”", "Send"],
-      ["Ardent Rail", "Funding round", "Sam Idowu, COO — “Congratulations on the raise.”", "Send"],
-      ["Talia Foods", "Usage threshold", "Jo Bergström, admin — “You've passed 80% of your seats.”", "Send"],
-      ["Lowen &amp; Bray", "Job change", "Nina Cardoso — she said “not now, try me in the new year” on 19 August. Second approach in three weeks.", "Read it"],
-      ["Kestrel Group", "Funding round", "Jo Bergström, CFO — mid-renewal, and Lazlo calls them Thursday. This would arrive first.", "Read it"],
-    ],
-    judgement: "Sending is the only thing that happens here. “Read it” takes an item out of this list and into your Gmail drafts, and Trig stops chasing it." } },
+  "Book meetings with the people we're missing": { layout: "drafts", run: "Today, 6:41 am · 14 drafted", noun: "Deals",
+    single: {
+      shape: "drafts",
+      name: "Meeting asks waiting on you",
+      meta: "Today, 6:41 am · 14 signals fired and 14 asks were written · 12 routine, 2 I would read first",
+      rows: [
+        { deal: "Brightsea", fired: "Funding round", who: "Ana Rehn, VP Ops", opens: "Congratulations on the Series B — usually means the ops team is about to double.", flag: null, body: "Congratulations on the Series B — usually means the ops team is about to double. If that's on the cards, worth 20 minutes on what you already have set up before you add people to it?" },
+        { deal: "Corvus", fired: "Job change", who: "Marta Lind, Head of Data", opens: "Saw you've moved into the data role. Worth 20 minutes?", flag: null, body: "Saw you've moved into the data role — congratulations. Your team already runs us for reporting; happy to walk you through what's there so you're not inheriting it blind." },
+        { deal: "Pike &amp; Rowe", fired: "Hired a role", who: "Ben Achebe, CTO", opens: "You're hiring two analytics engineers.", flag: null, body: "You're hiring two analytics engineers. When they land they'll ask the same three questions everyone does — happy to save you that conversation." },
+        { deal: "Ardent Rail", fired: "Funding round", who: "Sam Idowu, COO", opens: "Congratulations on the raise.", flag: null, body: "Congratulations on the raise. The scaling question usually lands about now — happy to share what similar teams did at this point." },
+        { deal: "Talia Foods", fired: "Usage threshold", who: "Jo Bergstr&ouml;m, admin", opens: "You've passed 80% of your seats.", flag: null, body: "You've passed 80% of your seats this month. Nothing breaks at 100%, but it's worth knowing before it does." },
+        { deal: "Meridian Health", fired: "Job change", who: "Alex Renn, Director", opens: "You've picked up the account — happy to catch you up.", flag: null, body: "I gather you've picked up this from Dana. Happy to spend 20 minutes catching you up on what was agreed rather than let you find it in a folder." },
+        { deal: "Northwind Rail", fired: "Hired a role", who: "Tom Verity, Head of Ops", opens: "You're hiring three ops analysts.", flag: null, body: "You're hiring three ops analysts. Onboarding them onto what you already run is usually the bit that slips — happy to help you plan it." },
+        { deal: "Bevan &amp; Co", fired: "Funding round", who: "Ruth Ellery, CFO", opens: "Congratulations on the round.", flag: null, body: "Congratulations on the round. Worth a short conversation about what changes on your side before it does." },
+        { deal: "Trellis", fired: "Usage threshold", who: "Nina Okafor, admin", opens: "You've passed 80% of your seats.", flag: null, body: "You've passed 80% of your seats. Worth a look at how they're being used before you buy more." },
+        { deal: "Oakhampton", fired: "Job change", who: "Sam Bright, VP Revenue", opens: "Congratulations on the new role.", flag: null, body: "Congratulations on the new role. We work with your team already — happy to give you the two-minute version." },
+        { deal: "Redwing", fired: "Hired a role", who: "Cara Milne, Head of RevOps", opens: "You're hiring a RevOps lead.", flag: null, body: "You're hiring a RevOps lead. Happy to share what the last three teams did in their first month, if it saves you a decision." },
+        { deal: "Fenwick", fired: "Funding round", who: "Alan Reddy, COO", opens: "Congratulations on the Series A.", flag: null, body: "Congratulations on the Series A. The ops question arrives about six weeks after the money does — happy to get ahead of it." },
+        { deal: "Lowen &amp; Bray", fired: "Job change", who: "Nina Cardoso, VP", opens: "Noticed you've moved to Lowen &amp; Bray — we worked together at Corvus.", flag: "She said &ldquo;not now, try me in the new year&rdquo; on 19 August. This would be the second approach in three weeks.", body: "Noticed you've moved to Lowen &amp; Bray — we worked together at Corvus. Happy to pick that up whenever it's useful." },
+        { deal: "Kestrel Group", fired: "Funding round", who: "Jo Bergstr&ouml;m, CFO", opens: "Congratulations on the round — worth revisiting the platform conversation?", flag: "Kestrel is mid-renewal and Lazlo calls them on Thursday. This would arrive first.", body: "Congratulations on the round — worth revisiting the platform conversation now the budget question has changed?" }
+      ],
+      after: "Trig wrote these; it does not send them. Putting them in your Gmail leaves 12 drafts in your drafts folder addressed and ready — you send, edit or bin them there, and Trig sees which ones went.",
+    } },
 
   "Log every touch, contact and outcome": { layout: "grid", run: "Continuous · 412 writes today", single: {
     shape: "nothing", name: "Log every touch, contact and outcome",

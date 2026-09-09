@@ -805,3 +805,60 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   background: var(--panel2); border: 1px solid var(--edge);
   border-radius: var(--r-pill); padding: 2px 10px;
 }
+
+/* -------------------------------------------------------- batch of drafts
+   Trig wrote them; a person decides which go. The bulk action puts the
+   chosen ones into Gmail — Trig never sends, and never composes. */
+
+.bulkbar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--ink); color: var(--white);
+  border-radius: var(--r-md); padding: 11px 14px; margin: 18px 0 14px;
+  font-size: var(--t-sm);
+}
+.bulk-count strong { font-weight: 500; }
+.bulk-note { color: rgba(255,255,255,0.6); }
+.bulkbar .btn { margin-left: auto; }
+.bulkbar .btn.primary { background: var(--white); border-color: var(--white); color: var(--ink); }
+.bulkbar .btn:disabled { opacity: 0.4; cursor: default; }
+
+/* one checkbox, drawn */
+.cb { display: inline-flex; align-items: center; cursor: pointer; }
+.cb input { position: absolute; opacity: 0; width: 0; height: 0; }
+.cb span {
+  width: 15px; height: 15px; border-radius: 3px;
+  border: 1px solid var(--hair); background: var(--white); display: block; position: relative;
+}
+.cb input:checked + span { background: var(--ink); border-color: var(--ink); }
+.cb input:checked + span::after {
+  content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+  border: solid var(--white); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg);
+}
+.cb input:indeterminate + span { background: var(--ink); border-color: var(--ink); }
+.cb input:indeterminate + span::after {
+  content: ""; position: absolute; left: 3px; top: 6px; width: 7px; height: 0;
+  border-top: 1.6px solid var(--white); transform: none;
+}
+.cb.all span { border-color: rgba(255,255,255,0.4); background: transparent; }
+.cb.all input:checked + span, .cb.all input:indeterminate + span { background: var(--white); border-color: var(--white); }
+.cb.all input:checked + span::after { border-color: var(--ink); }
+.cb.all input:indeterminate + span::after { border-top-color: var(--ink); }
+
+.drafts-table { padding: 0; }
+.drafts-table .row { grid-template-columns: 22px 132px 116px 1fr 72px; gap: 14px; align-items: start; }
+.drafts-table .row.head { align-items: center; }
+.drafts-table .row.item { padding: 11px 14px; border-bottom: 1px solid var(--rule); }
+.drafts-table .row.item:hover { background: var(--panel2); }
+.drafts-table .row.item[data-off] { opacity: 0.45; }
+
+.d-deal  { font-size: var(--t-md); font-weight: 500; }
+.d-fired { font-size: var(--t-sm); color: var(--ink-2); }
+.d-who   { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.d-open  { font-size: var(--t-sm); line-height: var(--lh-sm); }
+.d-flag  { font-size: var(--t-sm); line-height: var(--lh-sm); color: #ba4325; }
+.d-full  { display: none; font-size: var(--t-sm); line-height: var(--lh-sm);
+           background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
+           padding: 11px 13px; margin-top: 4px; }
+.draft[data-open] .d-full { display: block; }
+.draft[data-open] .d-open { color: var(--ink-3); }
+.d-act { display: flex; justify-content: flex-end; }
