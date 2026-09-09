@@ -281,6 +281,8 @@ view.addEventListener("click", (e) => {
   if (log) return showDrawer(CANVAS.log(log.dataset.log));
   const rn = e.target.closest("[data-renewal]");
   if (rn) return showDrawer(CANVAS.renewal(rn.dataset.renewal));
+  const champ = e.target.closest("[data-champ]");
+  if (champ) return showDrawer(CANVAS.champs(champ.dataset.champ));
   const call = e.target.closest("[data-call]");
   if (call) return showDrawer(CANVAS.pack(call.dataset.call));
   const dayT = e.target.closest("[data-day-toggle]");

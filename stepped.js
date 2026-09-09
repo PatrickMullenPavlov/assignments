@@ -1,6 +1,7 @@
 import { ACCOUNTS, SETS, count, pct } from "./cohort.js";
 import { LOGS, BLIND_RUNS } from "./logs.js";
 import { RENEWALS, TOTAL, INSIDE_90, FALLING, money } from "./renewals.js";
+import { CHAMPIONS, SET, byKind, arm, armBack, rate, KIND_KEYS, KIND, WATCHED } from "./champions.js";
 
 /* The stepped view: assignment → subjects → the work.
 
@@ -165,6 +166,159 @@ CANVAS.packs = (it) => `
       )
       .join("")}
   </div>`;
+
+/* CHASE QUIET CHAMPIONS — the subject is a person, and "quiet" is four
+   different things. The outage is a banner on top of the report, not the
+   report itself: this has been live since June and most of what it knows
+   was learned before it went blind. */
+
+const chasedBack = () => CHAMPIONS.filter((c) => c.chased && c.returned);
+const aloneBack = () => CHAMPIONS.filter((c) => !c.chased && c.returned);
+
+CANVAS.chase = () => `
+  <div class="canvas-head">
+    <div>
+      <h2>Chase quiet champions</h2>
+      <p class="canvas-verdict"><strong>Stuck, and misjudged.</strong> It has been blind for ${BLIND_RUNS} runs — but the three months before that say it works, for one of the four reasons a champion goes quiet.</p>
+      <p class="canvas-meta">Live since 19 June · every weekday, 6:40 am · watches ${WATCHED} champions · ${CHAMPIONS.length} have gone quiet since it started</p>
+    </div>
+    <div class="canvas-actions tight">
+      <button class="btn primary" type="button">Reconnect HubSpot</button>
+      <button class="btn" type="button">Edit</button>
+    </div>
+  </div>
+
+  <div class="outage">
+    <span class="outage-t">Blind since 29 August.</span>
+    It cannot read HubSpot, so it has checked nobody for ${BLIND_RUNS} runs. Three champions crossed 30 days quiet in that window and nobody was told —
+    <button class="door" type="button" data-log="blind">see the runs</button> or
+    <button class="door" type="button" data-log="invisible">the ${WATCHED} it can't look at</button>.
+    Everything below is what it learned before that, and it still holds.
+  </div>
+
+  <div class="def-strip">
+    <div class="def">
+      <h3>A champion is</h3>
+      <p>The person at an account who has <strong>replied most in the last 180 days</strong> — not whoever HubSpot has flagged. Those disagree on 11 of the ${WATCHED} it watches.</p>
+      <span class="def-where">A judgement Trig makes. The CRM flag is often two people out of date.</span>
+    </div>
+    <div class="def">
+      <h3>Quiet is</h3>
+      <p><strong>30 days</strong> with no reply, no open and no login. Not 30 days without us contacting them — 30 days of nothing from their side.</p>
+      <span class="def-where">Set in the cohort, not here.</span>
+    </div>
+  </div>
+
+  <h3 class="canvas-h">What it does when someone goes quiet</h3>
+  <ol class="flowsteps">
+    <li class="trigger">
+      <span class="fs-n">T</span>
+      <span class="fs-b"><span class="fs-t">A champion hits 30 days with nothing from their side</span>
+        <span class="fs-s">checked every weekday against everyone it watches</span></span>
+      <span class="fs-through">${CHAMPIONS.length} since June</span>
+      <span class="fs-tag">trigger</span>
+    </li>
+    <li class="wait"><span>first, it checks why</span><span class="wait-here">and this is where it goes wrong</span></li>
+    <li class="send">
+      <span class="fs-n">1</span>
+      <span class="fs-b"><span class="fs-t">Send a short question from the account owner</span>
+        <span class="fs-s">no pitch — “anything I should know?”</span></span>
+      <span class="fs-through">${SET.chased().length} sent</span>
+      <span class="fs-tag">sends itself</span>
+    </li>
+    <li class="wait"><span>then 10 days, if nothing</span></li>
+    <li class="needs">
+      <span class="fs-n">2</span>
+      <span class="fs-b"><span class="fs-t">Hand it to the account owner</span>
+        <span class="fs-s">it stops. A second automated nudge to a silent person is noise.</span></span>
+      <span class="fs-through">14 handed over</span>
+      <span class="fs-tag">needs you</span>
+    </li>
+  </ol>
+  <p class="canvas-after">It sends once and then stops. What it does <em>not</em> do is check why they went quiet before sending — which is the whole finding below.</p>
+
+  <h3 class="canvas-h">Did it work</h3>
+  <div class="held">
+    <div><span class="held-n">${rate(chasedBack(), SET.chased())}</span><span class="held-l">came back after a nudge — ${chasedBack().length} of ${SET.chased().length}</span></div>
+    <div><span class="held-n quiet">${rate(aloneBack(), SET.leftAlone())}</span><span class="held-l">came back with no nudge at all — ${aloneBack().length} of ${SET.leftAlone().length}</span></div>
+    <p class="held-say">Read like that, chasing is worse than doing nothing. That reading is wrong, and the table below is why.</p>
+  </div>
+
+  <h3 class="canvas-h">Why they went quiet, and whether chasing helped</h3>
+  <div class="table set-table chase-table" style="--set-cols:190px 62px 116px 116px 1fr">
+    <div class="row head">
+      <span>Why they went quiet</span><span>How many</span><span>Chased</span><span>Left alone</span><span>What that means</span>
+    </div>
+    ${[
+      ["risk", "Chase them. This is the entire value of the assignment, and it is buried in the average."],
+      ["delegated", "Don't. They handed over and the account is fine — a nudge reads as not paying attention."],
+      ["left", "Neither. Six people who had left the company, still listed in the CRM. This is a data job."],
+      ["seasonal", "Wait. Four of five came back on their own, and waiting costs nothing."],
+    ]
+      .map(
+        ([k, meaning]) => `
+      <div class="row item${k === "risk" ? " hot" : ""}">
+        <span><strong>${KIND[k].short}</strong><em>${KIND[k].tell}</em></span>
+        <span class="ch-n"><button class="door" type="button" data-champ="${k}">${byKind(k).length}</button></span>
+        <span class="ch-r ${k === "risk" ? "good" : ""}">${rate(armBack(k, true), arm(k, true))}<em>${armBack(k, true).length} of ${arm(k, true).length}</em></span>
+        <span class="ch-r ${k === "delegated" || k === "seasonal" ? "good" : ""}">${rate(armBack(k, false), arm(k, false))}<em>${armBack(k, false).length} of ${arm(k, false).length}</em></span>
+        <span>${meaning}</span>
+      </div>`,
+      )
+      .join("")}
+  </div>
+
+  <div class="finding">
+    <p><strong>The average is hiding two opposite results.</strong> When the account has gone quiet as well, a nudge brings them back ${rate(armBack("risk", true), arm("risk", true))} of the time against ${rate(armBack("risk", false), arm("risk", false))} left alone — better than anything else running. When they have simply delegated, chasing them does <em>worse</em> than silence, ${rate(armBack("delegated", true), arm("delegated", true))} against ${rate(armBack("delegated", false), arm("delegated", false))}.</p>
+    <p>It sends the same email to both, because it never asks why. Adding that one check before step 1 would take ${arm("delegated", true).length + arm("left", true).length} of the ${SET.chased().length} nudges out of the world and leave the ones that work.</p>
+    <div class="canvas-actions"><button class="btn primary" type="button">Add the check before step 1</button><button class="btn" type="button">Show me the ${arm("delegated", true).length} it shouldn't have chased</button></div>
+  </div>
+
+  <h3 class="canvas-h">Run by run</h3>
+  <div class="table set-table runs-table" style="--set-cols:126px 78px 76px 82px 1fr">
+    <div class="row head"><span>Run</span><span>Checked</span><span>Went quiet</span><span>Nudged</span><span>Outcome</span></div>
+    <div class="row change bad"><span class="cl-d">29 Aug</span><span class="cl-t">The HubSpot token expired. Every run since has finished in three seconds having read nothing, and none of them said so.</span></div>
+    ${[
+      ["28 Aug 6:40 am", "18", "1", "1", "Sam Idowu at Ardent Rail — nudged, no reply"],
+      ["27 Aug 6:40 am", "18", "0", "0", "nothing crossed the line"],
+      ["26 Aug 6:40 am", "18", "2", "1", "one delegated, correctly left alone"],
+      ["22 Aug 6:40 am", "17", "1", "1", "Ruth Ellery at Halcyon — replied the next day"],
+      ["19 Aug 6:40 am", "17", "0", "0", "nothing crossed the line"],
+    ]
+      .map((r) => `<div class="row item">${r.map((c) => `<span>${c}</span>`).join("")}</div>`)
+      .join("")}
+    <div class="row change good"><span class="cl-d">14 Aug</span><span class="cl-t">Step 2 changed from a second automated nudge to a handover. Replies to the first nudge were unaffected; complaints stopped.</span></div>
+    <div class="row change"><span class="cl-d">19 Jun</span><span class="cl-t">Turned on by Marcus Ade, watching 12 champions. Now 18.</span></div>
+  </div>`;
+
+/* the people behind a kind of quiet */
+CANVAS.champs = (kind) => {
+  const rows = byKind(kind);
+  return `
+    <header>
+      <div>
+        <p class="drawer-kind">${KIND[kind].short}</p>
+        <h2>${rows.length} champions</h2>
+        <p>${KIND[kind].tell}</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body">
+      <ul class="acct-list">
+        ${rows
+          .map(
+            (c) => `<li>
+              <span class="al-name">${c.name}</span>
+              <span class="al-where">${c.days} days quiet</span>
+              <span class="al-sub">${c.account} · £${c.value}k · ${c.state}</span>
+            </li>`,
+          )
+          .join("")}
+      </ul>
+    </div>`;
+};
 
 /* THE WEEK — a calendar of recurring customer calls. Days expand and
    collapse; a call opens its pack in the drawer. The pack itself is
@@ -1719,18 +1873,7 @@ export const RUNS = {
 
   /* ---- BATCH — column 2 stays -------------------------------------------- */
 
-  "Chase quiet champions": { layout: "batch", run: "Today, 6:40 am · 3s · produced nothing", single: {
-    shape: "nothing", name: "Chase quiet champions",
-    meta: "Live since 19 June · every weekday, 6:40 am · ran today in 3 seconds",
-    ok: false,
-    verdict: `Nothing today, and that's wrong. It hasn't been able to read HubSpot since 29 August, so it has found nothing for ${BLIND_RUNS} runs.`,
-    proof: [["0", "champions checked", "it couldn't list them — 18 the last time it could", "invisible"],
-            ["0", "activity records read", "against 412 on 28 August, the last good run"],
-            [String(BLIND_RUNS), "runs that found nothing", "28 August was the last one that could look at anything", "blind"],
-            ["3s", "today's run", "a normal run takes 41 seconds, because there is something to read"]],
-    cost: "Reading the history now the gap is known: 3 champions crossed 30 days quiet while it was blind. Sam Idowu at Ardent Rail is on day 41. Nobody was told.",
-    normally: "batch",
-    normallyNote: "One nudge per champion, worked through one at a time. There would be 18 in the column beside this." } },
+  "Chase quiet champions": { layout: "batch", run: "Today, 6:40 am · 3s · produced nothing", single: { shape: "chase" } },
 
   "Win back lapsed trials": { layout: "batch", run: "Tuesday 2 Sep, 6:40 am · 12 touched", noun: "Accounts",
     single: {

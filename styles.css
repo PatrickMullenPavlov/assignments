@@ -1053,3 +1053,35 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 }
 
 .pack-waiting.flush { margin: 0 0 4px; padding: 10px 12px; border: 1px solid var(--signal-200, #ffd3c7); border-radius: var(--r-md); }
+
+/* --------------------------------------------------- chase quiet champions
+   The outage is a banner over the report, not the report. */
+
+.outage {
+  background: #fff6f4; border: 1px solid #ffd3c7; border-radius: var(--r-md);
+  padding: 12px 16px; margin: 18px 0 4px;
+  font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink);
+}
+.outage-t { font-weight: 500; color: #ba4325; }
+.outage .door { color: #ba4325; }
+
+.chase-table .row { align-items: start; }
+.chase-table .row.item { padding: 12px 14px; border-bottom: 1px solid var(--rule); font-size: var(--t-sm); line-height: var(--lh-sm); }
+.chase-table strong { font-weight: 500; }
+.chase-table em { display: block; font-style: normal; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); margin-top: 2px; }
+.ch-n { font-variant-numeric: tabular-nums; }
+.ch-r { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.ch-r.good { color: #077764; }
+
+/* the conclusion the average was hiding */
+.finding {
+  background: var(--ink); color: var(--white);
+  border-radius: var(--r-md); padding: 16px 18px; margin-top: 16px;
+}
+.finding p { margin: 0 0 9px; font-size: var(--t-sm); line-height: var(--lh-sm); }
+.finding p:last-of-type { color: rgba(255,255,255,0.72); }
+.finding strong { font-weight: 500; }
+.finding em { font-style: italic; }
+.finding .btn { background: var(--white); border-color: var(--white); }
+.finding .btn.primary { background: var(--white); color: var(--ink); }
+.finding .btn:not(.primary) { background: transparent; border-color: rgba(255,255,255,0.3); color: var(--white); }
