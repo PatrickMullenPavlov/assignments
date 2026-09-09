@@ -287,50 +287,50 @@ CANVAS.report = (it) => `
   </div>
 
   <h3 class="canvas-h">Run by run</h3>
-  <div class="canvas-cols runs">
-    <div>
-      <div class="table set-table" style="--set-cols:${it.runsWidths}">
-        <div class="row head">${it.runsCols.map((c) => `<span>${c}</span>`).join("")}</div>
-        ${it.runs.map((r) => `<div class="row item">${r.map((c) => `<span>${c}</span>`).join("")}</div>`).join("")}
-      </div>
-    </div>
-    <div>
-      <h4 class="sub-h">What changed, and when</h4>
-      <ul class="changelog">
-        ${it.changes.map((c) => `<li class="${c[2] || ""}"><span class="cl-d">${c[0]}</span><span>${c[1]}</span></li>`).join("")}
-      </ul>
-    </div>
-  </div>`;
+  <div class="table set-table runs-table" style="--set-cols:${it.runsWidths}">
+    <div class="row head">${it.runsCols.map((c) => `<span>${c}</span>`).join("")}</div>
+    ${it.timeline
+      .map((e) =>
+        e.change
+          ? `<div class="row change ${e.tone || ""}">
+               <span class="cl-d">${e.when}</span>
+               <span class="cl-t">${e.change}</span>
+             </div>`
+          : `<div class="row item">${e.cells.map((c) => `<span>${c}</span>`).join("")}</div>`,
+      )
+      .join("")}
+  </div>
+  <p class="canvas-after">A change sits between the runs it separates, so the row below one is the first run after it.</p>`;
 
-/* Opening a count: the same accounts, listed. */
+/* Opening a count: the same accounts, in a drawer. A list of who is a
+   lookaside from the report, not a page you navigate to. */
 CANVAS.set = (key) => {
   const rows = SETS[key].of();
   return `
-  <div class="canvas-head">
-    <div>
-      <button class="back-report" type="button" data-back-report>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        The report
+    <header>
+      <div>
+        <h2>${rows.length} ${SETS[key].label}</h2>
+        <p>Every one of them, not a sample · Win back lapsed trials</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
-      <h2>${rows.length} ${SETS[key].label}</h2>
-      <p class="canvas-meta">Every one of them, not a sample. Win back lapsed trials · run Tuesday 2 September.</p>
-    </div>
-  </div>
-  <div class="table set-table" style="--set-cols:180px 176px 200px 1fr 66px">
-    <div class="row head"><span>Account</span><span>Trial use</span><span>Where they are</span><span>What happened</span><span>When</span></div>
-    ${rows
-      .map(
-        (a) => `<div class="row item">
-          <span>${a.name}</span>
-          <span class="q">${a.bandLabel}</span>
-          <span>${a.positionLabel}</span>
-          <span class="q">${a.what}</span>
-          <span class="q">${a.when}</span>
-        </div>`,
-      )
-      .join("")}
-  </div>`;
+    </header>
+    <div class="drawer-body">
+      <ul class="acct-list">
+        ${rows
+          .map(
+            (a) => `<li>
+              <span class="al-name">${a.name}</span>
+              <span class="al-where">${a.positionLabel}</span>
+              <span class="al-sub">${a.bandLabel} · ${a.what} · ${a.when}</span>
+            </li>`,
+          )
+          .join("")}
+      </ul>
+    </div>`;
 };
+
 
 /* A run that produced nothing. Not a layout — a STATE any layout can be
    in, so it renders above whatever the layout would have shown.         */
@@ -542,23 +542,20 @@ export const RUNS = {
           ],
           note: "Half the cohort never really tried the product. They are dragging the whole number down, and no email fixes that. Narrow the cohort to 5+ days and the rate is 19%." },
       ],
-      runsWidths: "112px 66px 62px 54px 58px 66px 1fr",
+      runsWidths: "116px 68px 62px 54px 60px 68px 1fr",
       runsCols: ["Run", "In cohort", "Touched", "Sent", "Clicked", "Came back", "Outcome"],
-      runs: [
-        ["9 Sep 6:40 am", "0", "0", "0", "—", "0", "cohort empty since the rule changed"],
-        ["2 Sep 6:40 am", "96", "12", "12", "2", "1", "1 converted, 11 still out"],
-        ["26 Aug 6:40 am", "94", "14", "14", "3", "2", "2 converted"],
-        ["19 Aug 6:40 am", "91", "17", "17", "2", "1", "1 converted"],
-        ["12 Aug 6:40 am", "88", "21", "21", "4", "2", "2 converted"],
-        ["5 Aug 6:40 am", "84", "19", "19", "3", "1", "1 converted"],
+      timeline: [
+        { cells: ["9 Sep 6:40 am", "0", "0", "0", "\u2014", "0", "nothing to run on"] },
+        { when: "5 Sep", tone: "bad", change: "Someone narrowed the cohort from 6 months to 6 weeks. 96 accounts became 0, and 24 of them were mid-sequence." },
+        { cells: ["2 Sep 6:40 am", "96", "12", "12", "2", "1", "1 came back, 11 still out"] },
+        { cells: ["26 Aug 6:40 am", "94", "14", "14", "3", "2", "2 came back"] },
+        { when: "19 Aug", tone: "good", change: "Step 2 changed from a generic case study to the one closest to their trial usage. Clicks went 5% to 11% from the next run on." },
+        { cells: ["19 Aug 6:40 am", "91", "17", "17", "2", "1", "1 came back"] },
+        { cells: ["12 Aug 6:40 am", "88", "21", "21", "4", "2", "2 came back"] },
+        { cells: ["5 Aug 6:40 am", "84", "19", "19", "3", "1", "1 came back"] },
+        { when: "4 Aug", change: "Discount raised from 15% to 20%. No change in conversion either way." },
+        { when: "21 Jul", change: "Turned on by Marcus Ade, with 94 accounts held back on purpose." },
       ],
-      changes: [
-        ["5 Sep", "Someone narrowed the cohort from 6 months to 6 weeks. 96 accounts became 0, and nobody was told.", "bad"],
-        ["19 Aug", "Step 2 changed from a generic case study to the one closest to their trial usage. Clicks went 5% to 11%.", "good"],
-        ["4 Aug", "Discount raised from 15% to 20%. No change in conversion either way."],
-        ["21 Jul", "Turned on by Marcus Ade, with 94 accounts held back on purpose."],
-      ],
-    },
   },
 
   /* ---- SINGLE ARTEFACT — column 2 stays ---------------------------------- */

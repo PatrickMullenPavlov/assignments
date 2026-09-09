@@ -787,14 +787,7 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .held-say { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); }
 
 .set-table .row.item.hot { background: var(--white); box-shadow: var(--shadow-nav); border-radius: 4px; }
-.canvas-cols.runs { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
 
-.changelog { list-style: none; margin: 0; padding: 0; }
-.changelog li { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--rule);
-  font-size: var(--t-sm); line-height: var(--lh-sm); }
-.changelog .cl-d { width: 46px; flex: none; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.changelog li.bad span:last-child { color: #ba4325; }
-.changelog li.good span:last-child { color: #077764; }
 
 /* how many are standing at each point, right now */
 .fs-through { font-size: var(--t-sm); color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
@@ -874,9 +867,24 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .held-n .door { color: inherit; }
 .set-table .row.item .q { color: var(--ink-2); }
 
-.back-report {
-  display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px -4px;
-  border: 0; background: none; padding: 4px; font: inherit;
-  font-size: var(--t-sm); color: var(--ink-2); cursor: pointer; border-radius: 5px;
+
+/* a change sits in the run table, in the run order it affected */
+.runs-table .row.change {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 9px 14px; background: var(--panel2);
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
 }
-.back-report:hover { color: var(--ink); background: var(--panel2); }
+.runs-table .row.change .cl-d { width: 62px; flex: none; color: var(--ink-3); font-variant-numeric: tabular-nums; font-size: var(--t-sm); }
+.runs-table .row.change .cl-t { font-size: var(--t-sm); line-height: var(--lh-sm); }
+.runs-table .row.change.bad  .cl-t { color: #ba4325; }
+.runs-table .row.change.good .cl-t { color: #077764; }
+
+/* the accounts behind a count, in the drawer */
+.acct-list { list-style: none; margin: 0; padding: 0; }
+.acct-list li {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 16px;
+  padding: 10px 0; border-bottom: 1px solid var(--rule);
+}
+.al-name  { font-size: var(--t-md); font-weight: 500; }
+.al-where { font-size: var(--t-sm); color: var(--ink-2); text-align: right; }
+.al-sub   { grid-column: 1 / -1; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-3); }

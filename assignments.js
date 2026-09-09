@@ -120,6 +120,7 @@ const ASSIGNMENTS = [
 import { onFilterChange } from "./filter.js";
 import { RUNS, CANVAS } from "./stepped.js";
 import { SETS } from "./cohort.js";
+import { showDrawer, hideDrawer } from "./drawer.js";
 
 let grid = document.querySelector("#assignments-list");
 
@@ -194,7 +195,6 @@ onFilterChange(paint);
 const view = document.querySelector("#asg-view");
 let openAssignment = null;
 let openItem = null;
-let openSet = null;
 
 function allItems(run) {
   return (run.groups ?? []).flatMap((g) => g.items);
@@ -263,9 +263,7 @@ function stepped(name) {
              </div>`
       }
 
-      <div class="col col-canvas">${
-        openSet ? CANVAS.set(openSet) : current ? CANVAS[current.shape](current) : ""
-      }</div>
+      <div class="col col-canvas">${current ? CANVAS[current.shape](current) : ""}</div>
     </div>`;
 }
 
@@ -278,8 +276,7 @@ function restore() {
 
 view.addEventListener("click", (e) => {
   const door = e.target.closest("[data-set]");
-  if (door) { openSet = door.dataset.set; return stepped(openAssignment); }
-  if (e.target.closest("[data-back-report]")) { openSet = null; return stepped(openAssignment); }
+  if (door) return showDrawer(CANVAS.set(door.dataset.set));
 
   const pick = e.target.closest("[data-pick]");
   if (pick) {
