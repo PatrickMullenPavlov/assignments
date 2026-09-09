@@ -285,7 +285,7 @@ view.addEventListener("click", (e) => {
     // the open row is the way back — there is nothing else to return to
     if (pick.dataset.pick === openAssignment) return restore();
     openItem = null;
-    openSet = null;
+    hideDrawer();
     return stepped(pick.dataset.pick);
   }
   const item = e.target.closest("[data-item]");
