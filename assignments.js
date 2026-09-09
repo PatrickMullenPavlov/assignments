@@ -192,25 +192,10 @@ onFilterChange(paint);
    becomes column 1, the run's subjects become column 2, and the work
    becomes the canvas. Column 2 is absent when the run made one thing. */
 
+/* The same container id on every page that carries the list, so the
+   navigator opens where the list already is rather than moving you
+   to another page. One code path, no branching on which page it is. */
 const view = document.querySelector("#asg-view");
-
-/* The dashboard shows the same list without the navigator. A row there
-   routes to the assignments page with that assignment already open —
-   a summary section is the wrong place for a three-column drill-down,
-   and its first column would repeat the list you just clicked. */
-if (!view) {
-  document.querySelector("#assignments-list")?.addEventListener("click", (e) => {
-    const row = e.target.closest(".row.item.asg");
-    if (row) location.href = "assignments.html?open=" + encodeURIComponent(row.dataset.name);
-  });
-  document.querySelector("#assignments-list")?.addEventListener("keydown", (e) => {
-    const row = e.target.closest(".row.item.asg");
-    if (row && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      location.href = "assignments.html?open=" + encodeURIComponent(row.dataset.name);
-    }
-  });
-}
 
 let openAssignment = null;
 let openItem = null;

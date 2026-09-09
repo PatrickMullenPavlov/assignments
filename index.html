@@ -58,8 +58,10 @@
           <h2>Assignments</h2>
           <button class="btn" type="button">Add an Assignment</button>
         </div>
-        <p class="filter-note" id="assignments-note"></p>
-        <div class="table assignments" id="assignments-list"></div>
+        <div id="asg-view">
+          <p class="filter-note" id="assignments-note"></p>
+          <div class="table assignments" id="assignments-list"></div>
+        </div>
       </section>
 
       <div class="divider"></div>
@@ -82,6 +84,7 @@
 <div id="scrim" data-open="false"></div>
 <aside id="drawer" data-open="false" aria-label="Review"></aside>
 <script type="module" src="shell.js"></script>
+<script type="module" src="drawer.js"></script>
 <script type="module" src="filter.js"></script>
 <script type="module" src="needs.js"></script>
 <script type="module" src="reports.js"></script>

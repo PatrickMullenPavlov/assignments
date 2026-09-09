@@ -1097,3 +1097,8 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
   font-size: var(--t-md); line-height: var(--lh-md);
 }
+
+/* Drilled in inside a dashboard section: the navigator sits under the
+   section head rather than replacing the page, so keep it modest. */
+#asg-view .stepped { min-height: 520px; border-top: 1px solid var(--rule); }
+#asg-view .col-list { padding-top: 4px; }
