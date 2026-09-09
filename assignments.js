@@ -193,6 +193,25 @@ onFilterChange(paint);
    becomes the canvas. Column 2 is absent when the run made one thing. */
 
 const view = document.querySelector("#asg-view");
+
+/* The dashboard shows the same list without the navigator. A row there
+   routes to the assignments page with that assignment already open —
+   a summary section is the wrong place for a three-column drill-down,
+   and its first column would repeat the list you just clicked. */
+if (!view) {
+  document.querySelector("#assignments-list")?.addEventListener("click", (e) => {
+    const row = e.target.closest(".row.item.asg");
+    if (row) location.href = "assignments.html?open=" + encodeURIComponent(row.dataset.name);
+  });
+  document.querySelector("#assignments-list")?.addEventListener("keydown", (e) => {
+    const row = e.target.closest(".row.item.asg");
+    if (row && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      location.href = "assignments.html?open=" + encodeURIComponent(row.dataset.name);
+    }
+  });
+}
+
 let openAssignment = null;
 let openItem = null;
 
@@ -202,7 +221,7 @@ function allItems(run) {
 
 function stepped(name) {
   const run = RUNS[name];
-  if (!run) return;
+  if (!run || !view) return;
   openAssignment = name;
 
   const single = run.single ?? null;
@@ -215,6 +234,8 @@ function stepped(name) {
   }
   const current =
     single ?? (openItem === "__report" ? run.report : items.find((i) => i.id === openItem));
+
+  history.replaceState(null, "", "?open=" + encodeURIComponent(name));
 
   view.innerHTML = `
     <div class="stepped${single ? " collapsed" : ""}">
@@ -270,11 +291,12 @@ function stepped(name) {
 function restore() {
   openAssignment = null;
   openItem = null;
+  history.replaceState(null, "", location.pathname);
   view.innerHTML = `<p class="filter-note" id="assignments-note"></p><div class="table assignments" id="assignments-list"></div>`;
   paint(repNow);
 }
 
-view.addEventListener("click", (e) => {
+if (view) view.addEventListener("click", (e) => {
   const door = e.target.closest("[data-set]");
   if (door) return showDrawer(CANVAS.set(door.dataset.set));
   const log = e.target.closest("[data-log]");
@@ -308,7 +330,7 @@ view.addEventListener("click", (e) => {
 
 /* Selection in a batch of drafts. The count in the bar and the count on
    the button are the same number, always. */
-view.addEventListener("change", (e) => {
+if (view) view.addEventListener("change", (e) => {
   const bar = view.querySelector("[data-bulk]");
   if (!bar) return;
   const boxes = [...view.querySelectorAll("[data-row]")];
@@ -325,10 +347,17 @@ view.addEventListener("change", (e) => {
 });
 
 /* Read expands the draft in place. It never removes anything. */
-view.addEventListener("click", (e) => {
+if (view) view.addEventListener("click", (e) => {
   const read = e.target.closest("[data-read]");
   if (!read) return;
   const row = read.closest(".draft");
   const open = row.toggleAttribute("data-open");
   read.textContent = open ? "Close" : "Read";
 });
+
+
+/* Arriving from the dashboard, or refreshing with one open. */
+if (view) {
+  const wanted = new URLSearchParams(location.search).get("open");
+  if (wanted && RUNS[wanted]) stepped(wanted);
+}
