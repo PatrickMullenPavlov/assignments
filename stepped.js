@@ -202,19 +202,20 @@ CANVAS.report = (it) => `
       .join("")}
   </div>
 
-  <h3 class="canvas-h">What it does, step by step</h3>
+  <h3 class="canvas-h">The work, and who is standing where</h3>
   <ol class="flowsteps">
     ${it.steps
       .map(
         (st) =>
           st.wait
-            ? `<li class="wait"><span>${st.wait}</span></li>`
+            ? `<li class="wait"><span>${st.wait}</span>${st.here ? `<span class="wait-here">${st.here}</span>` : ""}</li>`
             : `<li class="${st.kind}">
                  <span class="fs-n">${st.n}</span>
                  <span class="fs-b">
                    <span class="fs-t">${st.t}</span>
                    <span class="fs-s">${st.s}</span>
                  </span>
+                 <span class="fs-through">${st.through}</span>
                  <span class="fs-tag">${st.tag}</span>
                </li>`,
       )
@@ -439,14 +440,14 @@ export const RUNS = {
           where: "Set in the steps, not here." },
       ],
       steps: [
-        { n: "T", t: "The trial ended 30 days ago and nothing converted", s: "checked every Tuesday against the cohort", tag: "trigger", kind: "trigger" },
+        { n: "T", t: "The trial ended 30 days ago and nothing converted", s: "checked every Tuesday against the cohort", through: "96 entered", tag: "trigger", kind: "trigger" },
         { wait: "straight away" },
-        { n: "1", t: "Ask what stopped them", s: "a plain question — no pitch, no link, no offer", tag: "sends itself", kind: "send" },
-        { wait: "then 14 days, if no reply" },
-        { n: "2", t: "Send the case study closest to their use case", s: "picked from what they actually used during the trial", tag: "sends itself", kind: "send" },
-        { wait: "then 14 days, if no reply" },
-        { n: "3", t: "Offer 20% for the first year", s: "written into the owner's Gmail, unsent", tag: "needs you", kind: "needs" },
-        { wait: "then it stops" },
+        { n: "1", t: "Ask what stopped them", s: "a plain question — no pitch, no link, no offer", through: "96 sent · 6 replied", tag: "sends itself", kind: "send" },
+        { wait: "then 14 days, if no reply", here: "4 sitting here now" },
+        { n: "2", t: "Send the case study closest to their use case", s: "picked from what they actually used during the trial", through: "84 sent · 9 replied", tag: "sends itself", kind: "send" },
+        { wait: "then 14 days, if no reply", here: "8 sitting here now" },
+        { n: "3", t: "Offer 20% for the first year", s: "written into the owner's Gmail, unsent", through: "61 written · 12 unsent", tag: "needs you", kind: "needs" },
+        { wait: "then it stops", here: "72 have left the machine" },
       ],
       stopsWhen: "It stops when they reply, when they convert, or when step 3 has been written. It never sends a fourth time, and it never offers a discount without a person seeing it first.",
       funnel: [["96", "reached", 10], ["41", "opened", 7], ["18", "clicked", 4], ["12", "replied", 3], ["7", "converted", 2]],
@@ -493,21 +494,57 @@ export const RUNS = {
       ],
     },
     groups: [
-      { label: "3 replied", items: [
-        { id: "w1", name: "Orvis", sub: "replied 3 Sep", shape: "batch",
-          meta: "Step 2 · sent 2 September · replied the next day",
-          why: ["Trial ended 14 June without converting.", "Used the product on 9 separate days — the top of the cohort.", "Opened the pricing page twice in August."],
-          did: ["Step 1 on 19 August. Opened, no reply.", "Step 2 on 2 September with the reporting case study. Replied the next day asking about seats."] } ] },
-      { label: "9 sent, no reply", items: [
-        { id: "w2", name: "Marchmont", sub: "step 2 · not opened", shape: "batch",
-          meta: "Step 2 · sent 2 September · not opened",
-          why: ["Trial ended 2 May without converting.", "Signed up, opened it once, never came back.", "In the half of the cohort that converts at 2%."],
-          did: ["Step 1 on 19 August. Not opened.", "Step 2 on 2 September. Not opened. One step left, and it is the discount."] } ] },
-      { label: "cohort now empty", tone: "warn", items: [
-        { id: "w3", name: "Nobody, since 5 September", sub: "the rule changed", shape: "batch",
-          meta: "0 accounts in the cohort",
-          why: ["The cohort rule changed on 5 September: 6 months became 6 weeks.", "96 accounts were in it. None are now."],
-          did: ["Ran on 9 September and found an empty cohort.", "Did not widen the cohort on its own. It never will."] } ] },
+      { label: "Waiting after step 1 · 4", items: [
+        { id: "a1", name: "Bevan &amp; Co", sub: "asked 2 Sep · 9 days in the wait", shape: "batch",
+          meta: "In the 14-day wait after step 1 · opened it, did not reply",
+          why: ["Trial ended 4 August. Used the product on 6 days.", "Opened step 1 twice but has not answered."],
+          did: ["Step 1 sent 2 September. Opened 2 September and again on the 4th.", "Step 2 is due on 16 September unless they reply first."] },
+        { id: "a2", name: "Kestrel Labs", sub: "asked 2 Sep · 9 days in the wait", shape: "batch",
+          meta: "In the 14-day wait after step 1 · not opened",
+          why: ["Trial ended 29 July. Signed up and opened it once.", "In the half of the cohort that comes back 2% of the time."],
+          did: ["Step 1 sent 2 September. Not opened.", "Step 2 is due on 16 September."] } ] },
+
+      { label: "Waiting after step 2 · 8", items: [
+        { id: "a3", name: "Marchmont", sub: "case study sent 2 Sep · not opened", shape: "batch",
+          meta: "In the 14-day wait after step 2 · neither email opened",
+          why: ["Trial ended 2 May. Signed up, opened it once, never came back.", "Two emails sent, neither opened."],
+          did: ["Step 1 on 19 August. Not opened.", "Step 2 on 2 September with the reporting case study. Not opened.", "Step 3 is the discount, and it is due on 16 September."] },
+        { id: "a4", name: "Trellis", sub: "case study sent 26 Aug · clicked", shape: "batch",
+          meta: "In the 14-day wait after step 2 · clicked, did not reply",
+          why: ["Trial ended 11 June. Used it on 7 days — the top third of the cohort.", "Clicked the case study on 27 August and read it for four minutes."],
+          did: ["Step 1 on 12 August. Opened, no reply.", "Step 2 on 26 August. Clicked the next day, no reply since.", "Step 3 is due on 9 September. It is worth reaching them first."] } ] },
+
+      { label: "At step 3, waiting on you · 12", tone: "warn", items: [
+        { id: "a5", name: "Redwing", sub: "discount written 2 Sep · unsent", shape: "batch",
+          meta: "Step 3 · in Kish's Gmail, unsent for 9 days",
+          why: ["Trial ended 21 June. Used it on 11 days, the heaviest user in the cohort.", "Replied to nothing, but opened every email."],
+          did: ["Steps 1 and 2 sent. Both opened, no reply.", "A 20% offer was written into Kish's Gmail on 2 September and has not been sent."] },
+        { id: "a6", name: "Cassidy Group", sub: "discount written 26 Aug · unsent", shape: "batch",
+          meta: "Step 3 · in Mia's Gmail, unsent for 16 days",
+          why: ["Trial ended 3 May. Used it on 5 days.", "Asked about pricing during the trial and never got an answer."],
+          did: ["Steps 1 and 2 sent. Step 1 opened.", "A 20% offer was written on 26 August. It has been sitting for over a fortnight."] } ] },
+
+      { label: "Left — came back · 7", items: [
+        { id: "a7", name: "Orvis", sub: "converted 3 Sep", shape: "batch",
+          meta: "Left the machine on 3 September · converted",
+          why: ["Trial ended 14 June. Used the product on 9 separate days.", "Opened the pricing page twice in August."],
+          did: ["Step 1 on 19 August. Opened, no reply.", "Step 2 on 2 September with the reporting case study. Replied the next day asking about seats.", "Left the sequence at step 2. No discount was ever offered."] },
+        { id: "a8", name: "Fenwick", sub: "converted 21 Aug", shape: "batch",
+          meta: "Left the machine on 21 August · converted",
+          why: ["Trial ended 30 April. Used it on 8 days."],
+          did: ["Step 1 on 5 August. Replied within the hour.", "Left at step 1. The other two steps never ran."] } ] },
+
+      { label: "Left — went silent · 55", items: [
+        { id: "a9", name: "Pentworth", sub: "all three steps, no open", shape: "batch",
+          meta: "Left the machine on 1 September · nothing was opened",
+          why: ["Trial ended 12 March. Signed up, opened it once, never returned.", "Three emails, no open, no click, no reply."],
+          did: ["Steps 1, 2 and 3 all sent. Nothing was opened.", "Stopped after step 3. It will not try again."] } ] },
+
+      { label: "Left — the rule removed them · 5", tone: "warn", items: [
+        { id: "a10", name: "Nobody, since 5 September", sub: "the cohort rule changed", shape: "batch",
+          meta: "0 accounts remain in the cohort",
+          why: ["The cohort rule changed on 5 September: 6 months became 6 weeks.", "96 accounts were in it. None are now — including 12 mid-sequence."],
+          did: ["Ran on 9 September and found an empty cohort.", "Did not widen the cohort on its own. It never will.", "The 12 accounts at step 3 were dropped mid-sequence and nobody was told."] } ] },
     ] },
 
   /* ---- SINGLE ARTEFACT — column 2 stays ---------------------------------- */
