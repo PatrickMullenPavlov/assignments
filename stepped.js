@@ -1,5 +1,5 @@
 import { ACCOUNTS, SETS, count, pct } from "./cohort.js";
-import { LOGS } from "./logs.js";
+import { LOGS, BLIND_RUNS } from "./logs.js";
 
 /* The stepped view: assignment → subjects → the work.
 
@@ -554,10 +554,10 @@ export const RUNS = {
     shape: "nothing", name: "Chase quiet champions",
     meta: "Live since 19 June · every weekday, 6:40 am · ran today in 3 seconds",
     ok: false,
-    verdict: "Nothing today, and that's wrong. It hasn't been able to read HubSpot since 29 August, so it has found nothing for 40 runs.",
+    verdict: `Nothing today, and that's wrong. It hasn't been able to read HubSpot since 29 August, so it has found nothing for ${BLIND_RUNS} runs.`,
     proof: [["0", "champions checked", "it couldn't list them — 18 the last time it could", "invisible"],
             ["0", "activity records read", "against 412 on 28 August, the last good run"],
-            ["40", "runs that found nothing", "28 August was the last one that could look at anything", "blind"],
+            [String(BLIND_RUNS), "runs that found nothing", "28 August was the last one that could look at anything", "blind"],
             ["3s", "today's run", "a normal run takes 41 seconds, because there is something to read"]],
     cost: "Reading the history now the gap is known: 3 champions crossed 30 days quiet while it was blind. Sam Idowu at Ardent Rail is on day 41. Nobody was told.",
     normally: "batch",

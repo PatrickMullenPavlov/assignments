@@ -87,11 +87,11 @@ const ITEMS = [
   {
     subject: "assignment", name: "Chase quiet champions", kind: "decision",
     owner: null, perRep: { Lazlo: "Itself · 5 of your champions", Mia: "Itself · 4 of your champions", "Cabbage Mick": "Itself · 3 of your champions", Yan: "Itself · 2 of your champions", Kish: "Itself · 4 of your champions" },
-    line: "Has run 40 times and produced nothing. It is blind, not quiet — see HubSpot above.",
+    line: "Eight runs since 29 August, all of them finding nothing. It is blind, not quiet — see HubSpot above.",
     blocks: "Itself · 18 accounts", whose: "You", age: "40 runs",
     inlineVerb: null,
     why: [
-      "0 output across 40 consecutive runs since 29 August.",
+      "0 output across 8 consecutive runs since 29 August.",
       "Before that it fired roughly twice a week for three months.",
       "The cause is upstream: it reads HubSpot, and HubSpot has been unreadable.",
     ],
@@ -101,7 +101,7 @@ const ITEMS = [
     ],
     artefact: null,
     actions: [{ label: "Fix the cause", primary: true }, { label: "Pause it until it's fixed" }, { label: "Leave it running" }],
-    after: "An assignment that produces nothing for 40 runs should say so. This row is Trig admitting it.",
+    after: "An assignment that produces nothing for 8 runs running should say so. This row is Trig admitting it.",
   },
   {
     subject: "account", name: "Ferrovia", kind: "decision",

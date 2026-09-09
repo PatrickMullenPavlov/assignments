@@ -79,7 +79,7 @@ const ASSIGNMENTS = [
     covers: "18 champions",
     needs: null,
     verdict: "Stuck",
-    evidence: "Nothing for 40 runs. It reads HubSpot, and HubSpot has been unreadable since 29 August.",
+    evidence: "Nothing for 8 runs. It reads HubSpot, and HubSpot has been unreadable since 29 August.",
     state: "bad",
   },
   {

@@ -42,17 +42,22 @@ const rejects = [
   ["Wed 09:37", "Corvus", "Opportunity", "Forecast Category is required. Third attempt since the field was added on 2 September."],
 ];
 
-/* 40 runs that found nothing, and the last one that could see */
-const blind = Array.from({ length: 40 }, (_, i) => {
-  const d = new Date(Date.UTC(2026, 8, 9) - i * 86400000);
-  const day = d.getUTCDay();
-  const date = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-  return { date, weekend: day === 0 || day === 6 };
-})
-  .filter((r) => !r.weekend)
-  .slice(0, 40)
-  .map((r) => [r.date + ", 6:40 am", "0", "0", "3s", "found nothing — could not read HubSpot"]);
+/* Every run since the token expired on 29 August, and the last one that
+   could see. Generated from the dates so the count cannot be wrong: the
+   figure on the report is this list's length. */
+const BLIND_FROM = Date.UTC(2026, 7, 31); // Monday 31 August, the first missed run
+const TODAY = Date.UTC(2026, 8, 9);
 
+const blind = [];
+for (let t = TODAY; t >= BLIND_FROM; t -= 86400000) {
+  const d = new Date(t);
+  if (d.getUTCDay() === 0 || d.getUTCDay() === 6) continue;
+  blind.push([
+    d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }) + ", 6:40 am",
+    "0", "0", "3s", "found nothing — could not read HubSpot",
+  ]);
+}
+export const BLIND_RUNS = blind.length;
 blind.push(["28 Aug, 6:40 am", "18", "412", "41s", "the last run that could see anything"]);
 
 /* the 18 it can no longer look at */
@@ -93,7 +98,7 @@ export const LOGS = {
   },
   blind: {
     label: "runs that found nothing",
-    meta: "Every run since 29 August, and the last one that could see. A normal run takes 41 seconds.",
+    meta: `All ${BLIND_RUNS} of them since the token expired on 29 August, and the last run that could see. A normal run takes 41 seconds.`,
     cols: ["Run", "Checked", "Records read", "Took", "Outcome"],
     widths: "132px 72px 104px 60px 1fr",
     rows: blind,
