@@ -894,3 +894,74 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .log-table .row.head { padding: 8px 12px; }
 .log-table .row.item span:first-child { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .proof-n .door { font: inherit; }
+
+/* ------------------------------------------------------------ call packs
+   Prep for a recurring customer call: what moved, what you promised, who
+   is in the room, what to raise, and what to leave alone. */
+
+.pack { border: 1px solid var(--rule); border-radius: var(--r-md); background: var(--white); margin-top: 14px; overflow: hidden; }
+.pack header {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px; border-bottom: 1px solid var(--rule); background: var(--panel2);
+}
+.pack-person { font-size: var(--t-sm); color: var(--ink-2); }
+
+.pack-waiting {
+  margin: 0; padding: 10px 18px; background: #fff6f4;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--t-sm); line-height: var(--lh-sm); color: #ba4325;
+}
+
+.pack-grid {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 260px;
+  gap: 28px; padding: 4px 18px 16px; align-items: start;
+}
+.pack h3 {
+  margin: 16px 0 7px; font-size: var(--t-label); font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
+}
+
+/* what moved — dated, and direction carried by the words plus one mark */
+.moved { list-style: none; margin: 0; padding: 0; }
+.moved li { display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 5px 0; align-items: baseline; }
+.mv-d { font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.mv-t { font-size: var(--t-sm); line-height: var(--lh-sm); position: relative; padding-left: 13px; }
+.mv-t::before {
+  content: ""; position: absolute; left: 0; top: 7px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3);
+}
+.moved li.up   .mv-t::before { background: #01b89b; }
+.moved li.down .mv-t::before { background: #f97d5e; }
+
+/* promises and asks — the state is a word, not a colour alone */
+.promises { list-style: none; margin: 0; padding: 0; }
+.promises li { display: grid; grid-template-columns: 78px 1fr; gap: 10px; padding: 5px 0; align-items: baseline; }
+.pr-s { font-size: var(--t-xs); color: var(--ink-3); }
+.promises li.missed .pr-s { color: #ba4325; }
+.promises li.done .pr-s { color: #077764; }
+.promises li span:last-child { font-size: var(--t-sm); line-height: var(--lh-sm); }
+.promises li.missed span:last-child { color: var(--ink); }
+
+/* who is in the room */
+.pack-who { border-left: 1px solid var(--rule); padding-left: 22px; }
+.who { padding: 6px 0; border-bottom: 1px solid var(--rule); }
+.who-n { display: block; font-size: var(--t-sm); font-weight: 500; }
+.who-r { display: block; font-size: var(--t-xs); color: var(--ink-3); }
+.who-s { display: block; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-2); margin-top: 3px; }
+.who.quiet .who-n { color: var(--ink-2); font-weight: 400; }
+
+/* the agenda, and the one thing not to say */
+.pack-agenda {
+  display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  gap: 28px; padding: 2px 18px 18px; border-top: 1px solid var(--rule); align-items: start;
+}
+.agenda { list-style: none; margin: 0; padding: 0; counter-reset: ag; }
+.agenda li { position: relative; padding: 7px 0 7px 24px; border-bottom: 1px solid var(--rule); }
+.agenda li::before {
+  counter-increment: ag; content: counter(ag);
+  position: absolute; left: 2px; top: 8px;
+  font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.ag-w { display: block; font-size: var(--t-md); line-height: var(--lh-md); }
+.ag-y { display: block; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); margin-top: 2px; }
+.pack-leave { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
