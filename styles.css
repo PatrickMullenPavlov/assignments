@@ -888,3 +888,9 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .al-name  { font-size: var(--t-md); font-weight: 500; }
 .al-where { font-size: var(--t-sm); color: var(--ink-2); text-align: right; }
 .al-sub   { grid-column: 1 / -1; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-3); }
+
+/* a log in the drawer: dense, monospaced figures, nothing decorative */
+.log-table .row.item { padding: 8px 12px; font-size: var(--t-sm); line-height: var(--lh-sm); }
+.log-table .row.head { padding: 8px 12px; }
+.log-table .row.item span:first-child { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.proof-n .door { font: inherit; }

@@ -277,6 +277,8 @@ function restore() {
 view.addEventListener("click", (e) => {
   const door = e.target.closest("[data-set]");
   if (door) return showDrawer(CANVAS.set(door.dataset.set));
+  const log = e.target.closest("[data-log]");
+  if (log) return showDrawer(CANVAS.log(log.dataset.log));
 
   const pick = e.target.closest("[data-pick]");
   if (pick) {

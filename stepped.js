@@ -1,4 +1,5 @@
 import { ACCOUNTS, SETS, count, pct } from "./cohort.js";
+import { LOGS } from "./logs.js";
 
 /* The stepped view: assignment → subjects → the work.
 
@@ -332,6 +333,71 @@ CANVAS.set = (key) => {
 };
 
 
+/* A BATCH OF DRAFTS — Trig has written them; a person decides which go.
+   Trig does not send: the bulk action puts the chosen ones into the
+   owner's Gmail, and sending happens there. Nothing here composes. */
+
+CANVAS.drafts = (it) => `
+  <div class="canvas-head">
+    <div>
+      <h2>${it.name}</h2>
+      <p class="canvas-meta">${it.meta}</p>
+    </div>
+  </div>
+
+  <div class="bulkbar" data-bulk>
+    <label class="cb all"><input type="checkbox" data-all checked><span></span></label>
+    <span class="bulk-count"><strong data-count>12</strong> of ${it.rows.length} selected</span>
+    <span class="bulk-note">The ${it.rows.filter((r) => r.flag).length} flagged below start unticked.</span>
+    <button class="btn primary" type="button" data-place>Put <span data-count2>12</span> in my Gmail</button>
+  </div>
+
+  <div class="table drafts-table">
+    <div class="row head">
+      <span></span><span>Deal</span><span>What fired</span><span>Who it goes to, and how it opens</span><span></span>
+    </div>
+    ${it.rows
+      .map(
+        (r, i) => `
+      <div class="row item draft${r.flag ? " flagged" : ""}" data-draft="${i}">
+        <label class="cb"><input type="checkbox" data-row${r.flag ? "" : " checked"}><span></span></label>
+        <span class="d-deal">${r.deal}</span>
+        <span class="d-fired">${r.fired}</span>
+        <span class="d-who">
+          <span class="d-open">${r.who} — &ldquo;${r.opens}&rdquo;</span>
+          ${r.flag ? `<span class="d-flag">${r.flag}</span>` : ""}
+          <span class="d-full">${r.body}</span>
+        </span>
+        <span class="d-act"><button class="btn sm" type="button" data-read="${i}">Read</button></span>
+      </div>`,
+      )
+      .join("")}
+  </div>
+
+  <p class="canvas-after">${it.after}</p>`;
+
+/* A log, in the drawer. Same rule as the report's counts: a number you
+   cannot open is a claim. */
+CANVAS.log = (key) => {
+  const l = LOGS[key];
+  return `
+    <header>
+      <div>
+        <h2>${l.rows.length === Number(l.rows.length) ? "" : ""}${l.label.replace(/^\w/, (c) => c.toUpperCase())}</h2>
+        <p>${l.meta}</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body">
+      <div class="table set-table log-table" style="--set-cols:${l.widths}">
+        <div class="row head">${l.cols.map((c) => `<span>${c}</span>`).join("")}</div>
+        ${l.rows.map((r) => `<div class="row item">${r.map((c) => `<span>${c}</span>`).join("")}</div>`).join("")}
+      </div>
+    </div>`;
+};
+
 /* A run that produced nothing. Not a layout — a STATE any layout can be
    in, so it renders above whatever the layout would have shown.         */
 CANVAS.nothing = (it) => `
@@ -341,7 +407,14 @@ CANVAS.nothing = (it) => `
   <div class="canvas-body">
     <h3>What it actually looked at</h3>
     <div class="proof">
-      ${it.proof.map((p) => `<div class="proof-row"><span class="proof-n">${p[0]}</span><div><span class="proof-l">${p[1]}</span><span class="proof-s">${p[2]}</span></div></div>`).join("")}
+      ${it.proof
+        .map(
+          (p) => `<div class="proof-row">
+            <span class="proof-n">${p[3] ? `<button class="door" type="button" data-log="${p[3]}">${p[0]}</button>` : p[0]}</span>
+            <div><span class="proof-l">${p[1]}</span><span class="proof-s">${p[2]}</span></div>
+          </div>`,
+        )
+        .join("")}
     </div>
     ${it.cost ? `<p class="canvas-after cost">${it.cost}</p>` : ""}
     ${it.normally ? `<p class="canvas-after">Normally this is a <strong>${it.normally}</strong>. ${it.normallyNote}</p>` : ""}
@@ -482,9 +555,9 @@ export const RUNS = {
     meta: "Live since 19 June · every weekday, 6:40 am · ran today in 3 seconds",
     ok: false,
     verdict: "Nothing today, and that's wrong. It hasn't been able to read HubSpot since 29 August, so it has found nothing for 40 runs.",
-    proof: [["0", "champions checked", "it couldn't list them — 18 the last time it could"],
+    proof: [["0", "champions checked", "it couldn't list them — 18 the last time it could", "invisible"],
             ["0", "activity records read", "against 412 on 28 August, the last good run"],
-            ["40", "runs that found nothing", "28 August was the last one that could look at anything"],
+            ["40", "runs that found nothing", "28 August was the last one that could look at anything", "blind"],
             ["3s", "today's run", "a normal run takes 41 seconds, because there is something to read"]],
     cost: "Reading the history now the gap is known: 3 champions crossed 30 days quiet while it was blind. Sam Idowu at Ardent Rail is on day 41. Nobody was told.",
     normally: "batch",
@@ -556,6 +629,7 @@ export const RUNS = {
         { when: "4 Aug", change: "Discount raised from 15% to 20%. No change in conversion either way." },
         { when: "21 Jul", change: "Turned on by Marcus Ade, with 94 accounts held back on purpose." },
       ],
+    },
   },
 
   /* ---- SINGLE ARTEFACT — column 2 stays ---------------------------------- */
