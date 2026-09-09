@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Needs you &middot; Trig</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-section="dashboard" data-page="needs">
+<div class="app">
+
+  <div class="body" data-shell>
+
+    <main class="panel">
+
+      <div class="titlebar">
+        <h1>Needs you</h1>
+        <div class="titlebar-actions"><button class="btn" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.1 15.1a2.1 2.1 0 1 1-2.1-2.1h2.1v2.1Zm1 0a2.1 2.1 0 0 1 4.2 0v5.2a2.1 2.1 0 1 1-4.2 0v-5.2Z"/><path d="M8.2 5.1a2.1 2.1 0 1 1 2.1-2.1v2.1H8.2Zm0 1a2.1 2.1 0 0 1 0 4.2H3a2.1 2.1 0 1 1 0-4.2h5.2Z"/><path d="M18.9 8.2a2.1 2.1 0 1 1 2.1 2.1h-2.1V8.2Zm-1 0a2.1 2.1 0 0 1-4.2 0V3a2.1 2.1 0 1 1 4.2 0v5.2Z"/><path d="M15.8 18.9a2.1 2.1 0 1 1-2.1 2.1v-2.1h2.1Zm0-1a2.1 2.1 0 0 1 0-4.2H21a2.1 2.1 0 1 1 0 4.2h-5.2Z"/></svg> Send to account owners</button><span class="expand" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7.5 7.5"/><path d="M3 21l7.5-7.5"/></svg></span></div>
+      </div>
+
+      <nav class="tabs" aria-label="Teammates">
+      <a class="tab" href="#" aria-current="true">All</a>
+      <a class="tab" href="#" >Lazlo</a>
+      <a class="tab" href="#" >Mia</a>
+      <a class="tab" href="#" >Cabbage Mick</a>
+      <a class="tab" href="#" >Yan</a>
+      <a class="tab" href="#" >Kish</a>
+      <a class="tab add" href="#">+ Add a Teammate</a>
+      </nav>
+
+      <section class="pad-bottom full">
+        <div class="table needs" id="needs-list"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+<div id="scrim" data-open="false"></div>
+<aside id="drawer" data-open="false" aria-label="Review"></aside>
+<script type="module" src="shell.js"></script>
+<script type="module" src="filter.js"></script>
+<script type="module" src="needs.js"></script>
+</body>
+</html>

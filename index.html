@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard &middot; Trig</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-section="dashboard" data-page="dashboard">
+<div class="app">
+
+  <div class="body" data-shell>
+
+    <main class="panel">
+
+      <div class="titlebar">
+        <h1>Dashboard</h1>
+        <span class="expand" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7.5 7.5"/><path d="M3 21l7.5-7.5"/></svg></span>
+      </div>
+
+      <nav class="tabs" aria-label="Teammates">
+      <a class="tab" href="#" aria-current="true">All</a>
+      <a class="tab" href="#" >Lazlo</a>
+      <a class="tab" href="#" >Mia</a>
+      <a class="tab" href="#" >Cabbage Mick</a>
+      <a class="tab" href="#" >Yan</a>
+      <a class="tab" href="#" >Kish</a>
+      <a class="tab add" href="#">+ Add a Teammate</a>
+      </nav>
+
+      <dl class="stats">
+      <div class="stat"><dt>Managed customers</dt><dd>36</dd></div>
+      <div class="stat"><dt>Managed revenue</dt><dd>$670,540</dd></div>
+      <div class="stat"><dt>Active Assignments</dt><dd>16</dd></div>
+      <div class="stat"><dt>Needs you</dt><dd id="needs-count">3</dd></div>
+      </dl>
+
+      <section class="overview">
+        <h2>Overview</h2>
+        <div class="line"><span class="flow prose"><i style="width:52px"></i><i style="width:168px"></i><i style="width:82px"></i><i style="width:122px"></i><i style="width:36px"></i><i style="width:172px"></i><i style="width:92px"></i></span></div>
+        <div class="line"><span class="flow prose"><i style="width:92px"></i><i style="width:100px"></i><i style="width:40px"></i><i style="width:156px"></i><i style="width:88px"></i><i style="width:190px"></i><i style="width:52px"></i></span></div>
+        <div class="line"><span class="flow prose"><i style="width:62px"></i><i style="width:82px"></i><i style="width:26px"></i><i style="width:122px"></i><i style="width:46px"></i><i style="width:132px"></i><i style="width:26px"></i><i style="width:132px"></i></span></div>
+        <div class="line"><span class="flow prose"><i style="width:176px"></i></span></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Needs you</h2>
+          <button class="btn" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.1 15.1a2.1 2.1 0 1 1-2.1-2.1h2.1v2.1Zm1 0a2.1 2.1 0 0 1 4.2 0v5.2a2.1 2.1 0 1 1-4.2 0v-5.2Z"/><path d="M8.2 5.1a2.1 2.1 0 1 1 2.1-2.1v2.1H8.2Zm0 1a2.1 2.1 0 0 1 0 4.2H3a2.1 2.1 0 1 1 0-4.2h5.2Z"/><path d="M18.9 8.2a2.1 2.1 0 1 1 2.1 2.1h-2.1V8.2Zm-1 0a2.1 2.1 0 0 1-4.2 0V3a2.1 2.1 0 1 1 4.2 0v5.2Z"/><path d="M15.8 18.9a2.1 2.1 0 1 1-2.1 2.1v-2.1h2.1Zm0-1a2.1 2.1 0 0 1 0-4.2H21a2.1 2.1 0 1 1 0 4.2h-5.2Z"/></svg> Send to account owners</button>
+        </div>
+        <div class="table needs" id="needs-list"></div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <div class="section-head">
+          <h2>Assignments</h2>
+          <button class="btn" type="button">Add an Assignment</button>
+        </div>
+        <p class="filter-note" id="assignments-note"></p>
+        <div class="table assignments" id="assignments-list"></div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section class="pad-bottom">
+        <div class="section-head">
+          <div>
+            <h2>Reports</h2>
+          </div>
+          <button class="btn" type="button">Add a Report</button>
+        </div>
+        <p class="section-sub">Deep dive investigations, built by the agent through canvases.</p>
+        <p class="filter-note" id="reports-note"></p>
+        <div class="reports-grid" id="reports-grid"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+<div id="scrim" data-open="false"></div>
+<aside id="drawer" data-open="false" aria-label="Review"></aside>
+<script type="module" src="shell.js"></script>
+<script type="module" src="filter.js"></script>
+<script type="module" src="needs.js"></script>
+<script type="module" src="reports.js"></script>
+<script type="module" src="assignments.js"></script>
+</body>
+</html>
