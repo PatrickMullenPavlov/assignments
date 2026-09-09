@@ -166,6 +166,109 @@ CANVAS.packs = (it) => `
       .join("")}
   </div>`;
 
+/* THE WEEK — a calendar of recurring customer calls. Days expand and
+   collapse; a call opens its pack in the drawer. The pack itself is
+   unchanged, it has just stopped being the top level. */
+
+CANVAS.week = (it) => `
+  <div class="canvas-head">
+    <div>
+      <h2>${it.name}</h2>
+      <p class="canvas-meta">${it.meta}</p>
+    </div>
+  </div>
+
+  <div class="wk-summary">
+    <div><span class="rn-n">${it.days.reduce((n, d) => n + d.calls.length, 0)}</span><span class="rn-l">calls this week</span></div>
+    <div><span class="rn-n">${it.totalValue}</span><span class="rn-l">of book in the room</span></div>
+    <div><span class="rn-n">${it.days.reduce((n, d) => n + d.calls.filter((c) => !c.read).length, 0)}</span><span class="rn-l">packs you haven't opened</span></div>
+    <p class="rn-say">${it.say}</p>
+  </div>
+
+  ${it.days
+    .map(
+      (d) => `
+    <section class="wk-day" data-day="${d.day}"${d.collapsed ? "" : " data-open"}>
+      <button class="wk-head" type="button" data-day-toggle="${d.day}">
+        <svg class="wk-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span class="wk-d">${d.day}</span>
+        <span class="wk-date">${d.date}</span>
+        <span class="wk-n">${d.calls.length} ${d.calls.length === 1 ? "call" : "calls"}</span>
+        <span class="wk-v">${d.value}</span>
+        ${d.note ? `<span class="wk-note">${d.note}</span>` : ""}
+      </button>
+      <div class="wk-calls">
+        ${d.calls
+          .map(
+            (c) => `
+          <button class="wk-call" type="button" data-call="${c.id}">
+            <span class="wk-time">${c.time}</span>
+            <span class="wk-body">
+              <span class="wk-acct">${c.account}<em>${c.person}</em></span>
+              <span class="wk-line">${c.headline}</span>
+            </span>
+            <span class="wk-meta">${c.money}</span>
+            <span class="wk-state${c.read ? "" : " unread"}">${c.read ? "Read" : "Not opened"}</span>
+            ${c.flag ? `<span class="wk-flag">${c.flag}</span>` : ""}
+          </button>`,
+          )
+          .join("")}
+      </div>
+    </section>`,
+    )
+    .join("")}`;
+
+/* one call's pack, in the drawer */
+CANVAS.pack = (id) => {
+  const p = WEEKCALLS[id];
+  return `
+    <header>
+      <div>
+        <p class="drawer-kind">${p.when}</p>
+        <h2>${p.account}</h2>
+        <p>${p.person} · ${p.money} · renews ${p.renews} · last spoke ${p.lastSpoke}</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body">
+      ${p.waiting ? `<p class="pack-waiting flush">${p.waiting}</p>` : ""}
+
+      <h3>What moved since ${p.lastSpoke}</h3>
+      <ul class="moved">
+        ${p.changed.map((c) => `<li class="${c.dir}"><span class="mv-d">${c.date}</span><span class="mv-t">${c.text}</span></li>`).join("")}
+      </ul>
+
+      <h3>What you said you'd do</h3>
+      <ul class="promises">
+        ${p.promises.map((q) => `<li class="${q.state}"><span class="pr-s">${q.state === "missed" ? "not done" : q.state === "done" ? "done" : "open"}</span><span>${q.text}</span></li>`).join("")}
+      </ul>
+
+      ${
+        p.asked.length
+          ? `<h3>What they asked for</h3>
+             <ul class="promises">
+               ${p.asked.map((q) => `<li class="${q.state}"><span class="pr-s">${q.state === "missed" ? "unanswered" : "open"}</span><span>${q.text}</span></li>`).join("")}
+             </ul>`
+          : ""
+      }
+
+      <h3>On the call</h3>
+      ${p.people.filter((x) => x.onCall).map((x) => `<div class="who"><span class="who-n">${x.name}</span><span class="who-r">${x.role}</span><span class="who-s">${x.note}</span></div>`).join("")}
+      <h3>Not on it, and matters</h3>
+      ${p.people.filter((x) => !x.onCall).map((x) => `<div class="who quiet"><span class="who-n">${x.name}</span><span class="who-r">${x.role}</span><span class="who-s">${x.note}</span></div>`).join("")}
+
+      <h3>What to raise</h3>
+      <ol class="agenda">
+        ${p.raise.map((r) => `<li><span class="ag-w">${r.what}</span><span class="ag-y">${r.why}</span></li>`).join("")}
+      </ol>
+
+      <h3>Leave it</h3>
+      <p class="pack-leave">${p.leave}</p>
+    </div>`;
+};
+
 /* GRID — one table about everyone. Scanned for the exception, not read. */
 CANVAS.grid = (it) => `
   <h2>${it.name}</h2>
@@ -440,6 +543,786 @@ CANVAS.set = (key) => {
 
 const TREND = { rising: "↑", falling: "↓", flat: "→", stalled: "→" };
 
+export const WEEKCALLS = {
+  "halcyon": {
+    "id": "halcyon",
+    "day": "Monday",
+    "time": "10:00",
+    "account": "Halcyon",
+    "person": "Ruth Ellery, VP Operations",
+    "money": "£142k",
+    "renews": "12 Nov",
+    "lastSpoke": "22 August",
+    "read": false,
+    "headline": "Reporting stopped 43 days ago, both ops admins gone, renewal in 10 weeks",
+    "changed": [
+      {
+        "date": "2 Sep",
+        "dir": "up",
+        "text": "API calls passed 4,000 a week, up 40% since June. Someone has built something on it."
+      },
+      {
+        "date": "30 Aug",
+        "dir": "down",
+        "text": "Ticket 4412 opened. Nine days, no reply from us."
+      },
+      {
+        "date": "27 Aug",
+        "dir": "down",
+        "text": "Two ops admin seats removed, 42 to 40. Both opened reports weekly."
+      },
+      {
+        "date": "19 Aug",
+        "dir": "up",
+        "text": "Seats in use reached 94% and have stayed there for three weeks."
+      },
+      {
+        "date": "28 Jul",
+        "dir": "down",
+        "text": "Reporting stopped entirely — 0 a week, against 11 through July."
+      }
+    ],
+    "promises": [
+      {
+        "state": "missed",
+        "text": "Send the reporting workflow doc. Eighteen days ago, still not sent."
+      },
+      {
+        "state": "done",
+        "text": "Introduce them to the ops team at Corvus. Done 26 August."
+      },
+      {
+        "state": "done",
+        "text": "Confirm the renewal date. Confirmed as 12 November."
+      }
+    ],
+    "asked": [
+      {
+        "state": "missed",
+        "text": "SSO pricing, asked on 22 August. Never answered."
+      },
+      {
+        "state": "open",
+        "text": "Ticket 4412 — a reporting export bug. Nine days, no reply."
+      }
+    ],
+    "people": [
+      {
+        "name": "Ruth Ellery",
+        "role": "champion · VP Operations",
+        "note": "replies within a day, every time. Last reply 22 Aug.",
+        "onCall": true
+      },
+      {
+        "name": "Marc Oyelaran",
+        "role": "admin",
+        "note": "replied 19 Aug. Not invited, and he owns the reporting.",
+        "onCall": false
+      },
+      {
+        "name": "Priya Shah, Tom Vale",
+        "role": "were the ops admins",
+        "note": "both seats removed 27 Aug. Neither replaced.",
+        "onCall": false
+      }
+    ],
+    "leave": "Don't open on the renewal number. Ruth has no budget authority, and leading with it will stall the four things she can actually answer.",
+    "waiting": "A draft to Ruth has been in your Gmail since yesterday. Send it before the call or it reads as an afterthought.",
+    "flag": "Draft unsent",
+    "raise": [
+      {
+        "what": "Who replaced the two ops admins?",
+        "why": "If nobody did, the seat drop and the reporting drop are one story, not two."
+      },
+      {
+        "what": "Get ahead of 4412",
+        "why": "Nine days with no reply from us. Better you raise it than she does."
+      },
+      {
+        "what": "Who is calling the API?",
+        "why": "Traffic up 40% while the interface went silent. Somebody is building on this and you don't know who."
+      },
+      {
+        "what": "Name an exec sponsor",
+        "why": "Ten weeks to renewal and there still isn't one. The last two that renewed without one dropped a tier."
+      }
+    ],
+    "when": "Monday 10:00"
+  },
+  "brightsea": {
+    "id": "brightsea",
+    "day": "Monday",
+    "time": "11:30",
+    "account": "Brightsea",
+    "person": "Ana Rehn, VP Operations",
+    "money": "£58k",
+    "renews": "8 Jun",
+    "lastSpoke": "4 September",
+    "read": true,
+    "headline": "Raised a Series B on 2 September — the ops team is about to double",
+    "changed": [
+      {
+        "date": "2 Sep",
+        "dir": "up",
+        "text": "Announced a Series B. Headcount plans not yet shared."
+      },
+      {
+        "date": "21 Aug",
+        "dir": "up",
+        "text": "Weekly active users up from 12 to 19 since July."
+      },
+      {
+        "date": "4 Aug",
+        "dir": "flat",
+        "text": "Seats unchanged at 20 since March."
+      }
+    ],
+    "promises": [
+      {
+        "state": "open",
+        "text": "Send the scaling guide. Agreed on 4 September, not yet sent."
+      }
+    ],
+    "asked": [],
+    "people": [
+      {
+        "name": "Ana Rehn",
+        "role": "champion · VP Operations",
+        "note": "replied 4 Sep. Quick, always.",
+        "onCall": true
+      },
+      {
+        "name": "Nobody in finance",
+        "role": "—",
+        "note": "a Series B means finance will get a say. We know none of them.",
+        "onCall": false
+      }
+    ],
+    "leave": "Don't quote seat pricing on this call. Ask what they're planning first, or the conversation becomes a negotiation before it's a plan.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "Congratulate, then ask what changes",
+        "why": "The raise was a week ago. The plan is being made now, not in January."
+      },
+      {
+        "what": "Ask who joins in the next quarter",
+        "why": "Seats have been flat at 20 all year and 19 people are active. They will run out."
+      },
+      {
+        "what": "Get a finance name",
+        "why": "A raise puts finance in the loop. We don't know anyone there."
+      }
+    ],
+    "when": "Monday 11:30"
+  },
+  "corvus": {
+    "id": "corvus",
+    "day": "Monday",
+    "time": "15:00",
+    "account": "Corvus",
+    "person": "Marta Lind, Head of Data",
+    "money": "£74k",
+    "renews": "8 Apr",
+    "lastSpoke": "3 September",
+    "read": true,
+    "headline": "One seat from a hard stop, and finance started using it unsold",
+    "changed": [
+      {
+        "date": "4 Sep",
+        "dir": "up",
+        "text": "Seats hit 23 of 24. One left."
+      },
+      {
+        "date": "28 Aug",
+        "dir": "up",
+        "text": "Finance started using it. Nobody sold to finance."
+      },
+      {
+        "date": "19 Aug",
+        "dir": "up",
+        "text": "Reports passed 15 a week, above anything in the band."
+      }
+    ],
+    "promises": [
+      {
+        "state": "done",
+        "text": "Send the expansion brief. Sent 7 September."
+      }
+    ],
+    "asked": [
+      {
+        "state": "open",
+        "text": "Whether finance can have their own workspace. Asked 3 September."
+      }
+    ],
+    "people": [
+      {
+        "name": "Marta Lind",
+        "role": "exec sponsor · Head of Data",
+        "note": "named on day 19 and on every call since.",
+        "onCall": true
+      },
+      {
+        "name": "Ren Kapoor",
+        "role": "finance lead",
+        "note": "four of his team have been using it since 28 Aug. Never contacted.",
+        "onCall": false
+      }
+    ],
+    "leave": "Don't lead with the upsell number. Ask what finance is doing first — the number is easier once they've described the value themselves.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "They are one seat from a hard stop",
+        "why": "23 of 24 for three weeks. This stops being a growth conversation the day it hits 24."
+      },
+      {
+        "what": "Ask what finance is doing with it",
+        "why": "Four people, unsold, since 28 August. Worth about £28k a year at your standard rate."
+      },
+      {
+        "what": "Offer Ren a workspace",
+        "why": "He asked on 3 September and nobody answered."
+      }
+    ],
+    "when": "Monday 15:00"
+  },
+  "cobalt": {
+    "id": "cobalt",
+    "day": "Tuesday",
+    "time": "14:00",
+    "account": "Cobalt Systems",
+    "person": "Marta Lind, Head of Data",
+    "money": "£88k",
+    "renews": "3 Mar",
+    "lastSpoke": "1 September",
+    "read": true,
+    "headline": "Going well and nobody has told her — she's three weeks into the role",
+    "changed": [
+      {
+        "date": "21 Aug",
+        "dir": "up",
+        "text": "Weekly active users passed 30 for the first time, up from 24 in July."
+      },
+      {
+        "date": "14 Aug",
+        "dir": "up",
+        "text": "Ren Kapoor added as an admin. First new admin since March."
+      },
+      {
+        "date": "2 Aug",
+        "dir": "up",
+        "text": "Cleared onboarding on day 26, four days inside the normal window."
+      },
+      {
+        "date": "19 Jul",
+        "dir": "down",
+        "text": "No exec sponsor named since the deal closed. Day 34 of adoption."
+      }
+    ],
+    "promises": [
+      {
+        "state": "done",
+        "text": "Send the saved-reports walkthrough. Sent 2 September, opened twice."
+      },
+      {
+        "state": "open",
+        "text": "Introduce Ren to support. Not done — he still hasn't been contacted."
+      }
+    ],
+    "asked": [
+      {
+        "state": "open",
+        "text": "Whether reporting can be scheduled weekly. Answered informally; nothing written down."
+      }
+    ],
+    "people": [
+      {
+        "name": "Marta Lind",
+        "role": "champion · Head of Data",
+        "note": "new in the role three weeks ago. Replied 3 Sep.",
+        "onCall": true
+      },
+      {
+        "name": "Ren Kapoor",
+        "role": "admin",
+        "note": "added 14 Aug — the first new admin since March. Never contacted.",
+        "onCall": false
+      }
+    ],
+    "leave": "Nothing to hold back. This is the one call this week where you can spend the time asking rather than explaining.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "Say the numbers back to her",
+        "why": "This account is going well and nobody has told her. She is three weeks into the role."
+      },
+      {
+        "what": "Ask what Ren is going to own",
+        "why": "He is the first new admin since March and has never been contacted by anyone here."
+      },
+      {
+        "what": "Name a sponsor",
+        "why": "Day 34 of a stage that clears in 45. It is the only marker off-pattern."
+      }
+    ],
+    "when": "Tuesday 14:00"
+  },
+  "trellis": {
+    "id": "trellis",
+    "day": "Tuesday",
+    "time": "16:00",
+    "account": "Trellis",
+    "person": "Nina Okafor, Operations admin",
+    "money": "£33k",
+    "renews": "19 May",
+    "lastSpoke": "12 August",
+    "read": true,
+    "headline": "Clicked the case study on 27 August and has said nothing since",
+    "changed": [
+      {
+        "date": "27 Aug",
+        "dir": "up",
+        "text": "Clicked the reporting case study and read it for four minutes."
+      },
+      {
+        "date": "14 Aug",
+        "dir": "flat",
+        "text": "Weekly active users steady at 11, at the bottom of the band."
+      },
+      {
+        "date": "2 Aug",
+        "dir": "down",
+        "text": "Passed 80% of seats and nobody has raised it."
+      }
+    ],
+    "promises": [
+      {
+        "state": "missed",
+        "text": "Send seat options. Promised 12 August, four weeks ago."
+      }
+    ],
+    "asked": [],
+    "people": [
+      {
+        "name": "Nina Okafor",
+        "role": "admin",
+        "note": "replies eventually. Last reply 12 Aug.",
+        "onCall": true
+      }
+    ],
+    "leave": "Don't apologise at length for the seat options. Send them, mention it once, move on.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "Send the seat options you promised in August",
+        "why": "Four weeks. Do it before the call, not after."
+      },
+      {
+        "what": "Ask about the case study",
+        "why": "She read it properly on 27 August and then went quiet. Something in it landed."
+      }
+    ],
+    "when": "Tuesday 16:00"
+  },
+  "meridian": {
+    "id": "meridian",
+    "day": "Wednesday",
+    "time": "11:00",
+    "account": "Meridian Health",
+    "person": "Alex Renn, Director of Ops",
+    "money": "£88k",
+    "renews": "22 May",
+    "lastSpoke": "26 August",
+    "read": true,
+    "headline": "A proposal has been finished and unsent for six days",
+    "changed": [
+      {
+        "date": "3 Sep",
+        "dir": "down",
+        "text": "Renewal proposal finished and not sent. Six days."
+      },
+      {
+        "date": "28 Aug",
+        "dir": "down",
+        "text": "Ticket volume doubled in August, all of it from one team."
+      },
+      {
+        "date": "14 Jul",
+        "dir": "flat",
+        "text": "Usage flat for four quarters at 22 of 30 seats."
+      }
+    ],
+    "promises": [
+      {
+        "state": "missed",
+        "text": "Write up what was agreed with Dana. Asked for on 26 August, not done."
+      },
+      {
+        "state": "done",
+        "text": "Get him admin access. Done 27 August."
+      }
+    ],
+    "asked": [
+      {
+        "state": "missed",
+        "text": "A summary of the original commitments. Asked twice, never sent."
+      }
+    ],
+    "people": [
+      {
+        "name": "Alex Renn",
+        "role": "inherited the account in July",
+        "note": "the previous sponsor never handed over. Replied 26 Aug.",
+        "onCall": true
+      },
+      {
+        "name": "Dana Whitlock",
+        "role": "the previous sponsor",
+        "note": "left in July. Everything agreed with her is undocumented.",
+        "onCall": false
+      }
+    ],
+    "leave": "Don't push for an uplift. Flat usage for four quarters won't support it, and asking turns a renewal into a negotiation.",
+    "waiting": "A renewal proposal has been finished and unsent for six days. It is in your Gmail.",
+    "flag": "Proposal unsent",
+    "raise": [
+      {
+        "what": "Send the proposal before the call",
+        "why": "Six days old. Arriving after the conversation reads as an afterthought."
+      },
+      {
+        "what": "Ask what he inherited and what he was never told",
+        "why": "Dana left in July and nothing was written down. He is guessing."
+      },
+      {
+        "what": "The ticket spike is one team",
+        "why": "Volume doubled in August from a single team. Find out which before it becomes the renewal story."
+      }
+    ],
+    "when": "Wednesday 11:00"
+  },
+  "northwind": {
+    "id": "northwind",
+    "day": "Wednesday",
+    "time": "13:30",
+    "account": "Northwind Rail",
+    "person": "Tom Verity, Head of Ops",
+    "money": "£112k",
+    "renews": "30 Jun",
+    "lastSpoke": "28 August",
+    "read": false,
+    "headline": "Hiring three ops analysts — the biggest account with no plan against it",
+    "changed": [
+      {
+        "date": "1 Sep",
+        "dir": "up",
+        "text": "Posted three ops analyst roles."
+      },
+      {
+        "date": "18 Aug",
+        "dir": "flat",
+        "text": "Usage steady at 34 of 40 seats since June."
+      },
+      {
+        "date": "4 Aug",
+        "dir": "down",
+        "text": "Tom is the only contact and he is leaving in November."
+      }
+    ],
+    "promises": [
+      {
+        "state": "open",
+        "text": "Map who replaces Tom. Raised internally on 28 August, nothing done."
+      }
+    ],
+    "asked": [],
+    "people": [
+      {
+        "name": "Tom Verity",
+        "role": "Head of Ops",
+        "note": "leaving in November. Nobody has been introduced.",
+        "onCall": true
+      }
+    ],
+    "leave": "Don't let this be a status call. The only thing that matters is a second name before November.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "Ask who takes over from Tom",
+        "why": "He leaves in November and the renewal is in June. Right now the account has one contact and he is going."
+      },
+      {
+        "what": "Three analysts are joining",
+        "why": "Onboarding them is the natural reason to be introduced to whoever replaces him."
+      },
+      {
+        "what": "Nothing about price",
+        "why": "Get the relationship mapped first."
+      }
+    ],
+    "when": "Wednesday 13:30"
+  },
+  "redwing": {
+    "id": "redwing",
+    "day": "Wednesday",
+    "time": "16:30",
+    "account": "Redwing",
+    "person": "Cara Milne, Head of RevOps",
+    "money": "£46k",
+    "renews": "11 Nov",
+    "lastSpoke": "19 August",
+    "read": false,
+    "headline": "A 20% offer has been sitting unsent in your Gmail for nine days",
+    "changed": [
+      {
+        "date": "2 Sep",
+        "dir": "down",
+        "text": "A discount offer was written and never sent. Nine days."
+      },
+      {
+        "date": "21 Jun",
+        "dir": "flat",
+        "text": "Trial ended without converting. Used the product on 11 days — the heaviest in its cohort."
+      }
+    ],
+    "promises": [
+      {
+        "state": "missed",
+        "text": "Send the discount offer. Written 2 September, still unsent."
+      }
+    ],
+    "asked": [],
+    "people": [
+      {
+        "name": "Cara Milne",
+        "role": "Head of RevOps",
+        "note": "opened every email, replied to none.",
+        "onCall": true
+      }
+    ],
+    "leave": "Don't lead with the discount. She used the product for eleven days — the value is established, the price isn't the blocker.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "Decide on the offer before the call",
+        "why": "It has been written for nine days. Send it or bin it, but don't arrive with it undecided."
+      },
+      {
+        "what": "She opened everything and replied to nothing",
+        "why": "That is interest without permission to act. Ask directly what would need to be true."
+      }
+    ],
+    "when": "Wednesday 16:30"
+  },
+  "talia": {
+    "id": "talia",
+    "day": "Thursday",
+    "time": "09:30",
+    "account": "Talia Foods",
+    "person": "Jo Bergström, Operations admin",
+    "money": "£61k",
+    "renews": "14 Jan",
+    "lastSpoke": "1 September",
+    "read": true,
+    "headline": "Passed 80% of seats, and six weeks out with no sponsor",
+    "changed": [
+      {
+        "date": "1 Sep",
+        "dir": "up",
+        "text": "Passed 80% of seats. Nothing breaks at 100%, but it is worth knowing first."
+      },
+      {
+        "date": "19 Aug",
+        "dir": "up",
+        "text": "New admin added, already opening reports weekly."
+      },
+      {
+        "date": "1 Jul",
+        "dir": "flat",
+        "text": "Usage flat since July, which is normal for them."
+      }
+    ],
+    "promises": [
+      {
+        "state": "done",
+        "text": "Send the seat forecast. Sent 2 September."
+      }
+    ],
+    "asked": [],
+    "people": [
+      {
+        "name": "Jo Bergström",
+        "role": "admin",
+        "note": "replied 1 Sep. The only person who has ever replied.",
+        "onCall": true
+      },
+      {
+        "name": "Nobody",
+        "role": "exec sponsor",
+        "note": "named in March, gone in June, nobody since.",
+        "onCall": false
+      }
+    ],
+    "leave": "Don't fill the half hour. Ending early on a healthy account is a signal in itself.",
+    "waiting": null,
+    "flag": null,
+    "raise": [
+      {
+        "what": "The seat threshold is a conversation, not a bill",
+        "why": "80% with six weeks to renewal. Raise it now and it isn't a surprise later."
+      },
+      {
+        "what": "Name a sponsor",
+        "why": "Six weeks out and there hasn't been one since June. Late, but not too late."
+      },
+      {
+        "what": "Nothing else",
+        "why": "This is a short call and there is no third thing worth its time."
+      }
+    ],
+    "when": "Thursday 09:30"
+  },
+  "kestrel": {
+    "id": "kestrel",
+    "day": "Thursday",
+    "time": "14:00",
+    "account": "Kestrel Group",
+    "person": "Jo Bergström, CFO",
+    "money": "£61k",
+    "renews": "19 Dec",
+    "lastSpoke": "14 August",
+    "read": false,
+    "headline": "No admin at all since 12 August, and a draft is waiting in your Gmail",
+    "changed": [
+      {
+        "date": "2 Sep",
+        "dir": "down",
+        "text": "Two nudges sent, neither opened."
+      },
+      {
+        "date": "20 Aug",
+        "dir": "down",
+        "text": "Weekly active users fell below the band."
+      },
+      {
+        "date": "12 Aug",
+        "dir": "down",
+        "text": "Both admins left. Nobody has been added since."
+      }
+    ],
+    "promises": [
+      {
+        "state": "missed",
+        "text": "Offer help replacing the admins. Raised internally 14 August, nothing sent."
+      }
+    ],
+    "asked": [],
+    "people": [
+      {
+        "name": "Jo Bergström",
+        "role": "CFO",
+        "note": "replied 14 Aug. A CFO, which makes her the sponsor if she'll take it.",
+        "onCall": true
+      }
+    ],
+    "leave": "Don't mention the two unopened nudges. They didn't land; saying so makes the call about us.",
+    "waiting": "A draft is in your Gmail from this morning.",
+    "flag": "Draft unsent",
+    "raise": [
+      {
+        "what": "They have no admin at all",
+        "why": "Both left on 12 August. This is a concrete thing to offer help with rather than a vague check-in."
+      },
+      {
+        "what": "Ask her to be the sponsor",
+        "why": "She is a CFO and she replies. The renewal is 19 December with nobody named."
+      }
+    ],
+    "when": "Thursday 14:00"
+  },
+  "ardent": {
+    "id": "ardent",
+    "day": "Friday",
+    "time": "15:00",
+    "account": "Ardent Rail",
+    "person": "Sam Idowu, COO",
+    "money": "£39k",
+    "renews": "2 Feb",
+    "lastSpoke": "6 August",
+    "read": false,
+    "headline": "34 days silent from the only contact who has ever engaged",
+    "changed": [
+      {
+        "date": "5 Sep",
+        "dir": "down",
+        "text": "Sam crossed 30 days quiet. Nobody was told — Chase quiet champions is blind."
+      },
+      {
+        "date": "6 Aug",
+        "dir": "down",
+        "text": "Last thing he opened. Nothing since."
+      },
+      {
+        "date": "12 Jul",
+        "dir": "flat",
+        "text": "Seats unchanged since June. Usage low but steady."
+      }
+    ],
+    "promises": [
+      {
+        "state": "missed",
+        "text": "Send the integration timeline. Promised on 6 August, five weeks ago."
+      }
+    ],
+    "asked": [
+      {
+        "state": "missed",
+        "text": "Whether the API rate limit can be raised. Asked 6 August, unanswered."
+      }
+    ],
+    "people": [
+      {
+        "name": "Sam Idowu",
+        "role": "COO · the only engaged contact",
+        "note": "hasn't opened anything in 34 days, against a 30-day line.",
+        "onCall": true
+      },
+      {
+        "name": "Six other named contacts",
+        "role": "in HubSpot",
+        "note": "none has engaged since May.",
+        "onCall": false
+      }
+    ],
+    "leave": "Don't apologise for the silence or lead with the unanswered API question. Ask the direct question while you have him.",
+    "waiting": "The assignment that watches this has been blind since 29 August. Nothing was sent and nothing was flagged.",
+    "flag": "Watcher blind",
+    "raise": [
+      {
+        "what": "Ask directly whether this is still a priority",
+        "why": "Thirty-four days silent from the only person engaged. The polite version wastes the call."
+      },
+      {
+        "what": "Get a second name",
+        "why": "Six other contacts, none engaged since May. One contact on a renewal is thin."
+      },
+      {
+        "what": "If he has moved on, say so",
+        "why": "A clear no is worth more than another quarter of chasing."
+      }
+    ],
+    "when": "Friday 15:00"
+  }
+};
+
 CANVAS.renewals = () => `
   <div class="canvas-head">
     <div>
@@ -614,139 +1497,163 @@ export const RUNS = {
   /* ---- SEQUENCE — collapses to one stack -------------------------------- */
 
   "Prep my 1:1s": { layout: "sequence", run: "Today, 6:40 am · 1m 42s · closed", single: {
-    shape: "packs",
-    name: "This week's customer one-to-ones",
-    meta: "Five recurring calls, in the order the week happens. Built 6:40 am from what changed, what you promised, and what they asked for.",
-    parts: [
+    shape: "week",
+    name: "Your week",
+    meta: "Eleven recurring customer calls, 14 to 18 September. Each pack is built at 6:40 am from what moved, what you promised, and what they asked for.",
+    totalValue: "£802k",
+    say: "Ordered by the diary, not by importance — the packs do the prioritising inside each day. Open a call to read its pack.",
+    days: [
       {
-        account: "Halcyon", person: "Ruth Ellery, VP Operations", when: "Mon 10:00", read: false,
-        money: "£142k", renews: "12 Nov", lastSpoke: "22 August",
-        waiting: "A draft to Ruth has been in your Gmail since yesterday. Send it before the call or it reads as an afterthought.",
-        people: [
-          { name: "Ruth Ellery", role: "champion · VP Operations", note: "replies within a day, every time. Last reply 22 Aug.", onCall: true },
-          { name: "Marc Oyelaran", role: "admin", note: "replied 19 Aug. Not invited, and he owns the reporting.", onCall: false },
-          { name: "Priya Shah, Tom Vale", role: "were the ops admins", note: "both seats removed 27 Aug. Neither replaced.", onCall: false },
-        ],
-        changed: [
-          { date: "2 Sep", dir: "up", text: "API calls passed 4,000 a week, up 40% since June. Someone has built something on it." },
-          { date: "30 Aug", dir: "down", text: "Ticket 4412 opened. Nine days, no reply from us." },
-          { date: "27 Aug", dir: "down", text: "Two ops admin seats removed, 42 to 40. Both opened reports weekly." },
-          { date: "19 Aug", dir: "up", text: "Seats in use reached 94% and have stayed there for three weeks." },
-          { date: "28 Jul", dir: "down", text: "Reporting stopped entirely — 0 a week, against 11 through July." },
-        ],
-        promises: [
-          { state: "missed", text: "Send the reporting workflow doc. Eighteen days ago, still not sent." },
-          { state: "done", text: "Introduce them to the ops team at Corvus. Done 26 August." },
-          { state: "done", text: "Confirm the renewal date. Confirmed as 12 November." },
-        ],
-        asked: [
-          { state: "missed", text: "SSO pricing, asked on 22 August. Never answered." },
-          { state: "open", text: "Ticket 4412 — a reporting export bug. Nine days, no reply." },
-        ],
-        raise: [
-          { what: "Who replaced the two ops admins?", why: "If nobody did, the seat drop and the reporting drop are one story, not two." },
-          { what: "Get ahead of 4412", why: "Nine days with no reply from us. Better you raise it than she does." },
-          { what: "Who is calling the API?", why: "Traffic up 40% while the interface went silent. Somebody is building on this and you don't know who." },
-          { what: "Name an exec sponsor", why: "Ten weeks to renewal and there still isn't one. The last two that renewed without one dropped a tier." },
-        ],
-        leave: "Don't open on the renewal number. Ruth has no budget authority, and leading with it will stall the four things above that she can actually answer.",
+            "day": "Monday",
+            "date": "14 September",
+            "value": "£274k",
+            "note": "1 pack unread",
+            "calls": [
+                  {
+                        "id": "halcyon",
+                        "time": "10:00",
+                        "account": "Halcyon",
+                        "person": "Ruth Ellery",
+                        "headline": "Reporting stopped 43 days ago, both ops admins gone, renewal in 10 weeks",
+                        "money": "£142k",
+                        "read": false,
+                        "flag": "Draft unsent"
+                  },
+                  {
+                        "id": "brightsea",
+                        "time": "11:30",
+                        "account": "Brightsea",
+                        "person": "Ana Rehn",
+                        "headline": "Raised a Series B on 2 September — the ops team is about to double",
+                        "money": "£58k",
+                        "read": true,
+                        "flag": null
+                  },
+                  {
+                        "id": "corvus",
+                        "time": "15:00",
+                        "account": "Corvus",
+                        "person": "Marta Lind",
+                        "headline": "One seat from a hard stop, and finance started using it unsold",
+                        "money": "£74k",
+                        "read": true,
+                        "flag": null
+                  }
+            ]
       },
       {
-        account: "Cobalt Systems", person: "Marta Lind, Head of Data", when: "Tue 14:00", read: true,
-        money: "£88k", renews: "3 Mar", lastSpoke: "1 September",
-        waiting: null,
-        people: [
-          { name: "Marta Lind", role: "champion · Head of Data", note: "new in the role three weeks ago. Replied 3 Sep.", onCall: true },
-          { name: "Ren Kapoor", role: "admin", note: "added 14 Aug — the first new admin since March. Never contacted.", onCall: false },
-        ],
-        changed: [
-          { date: "21 Aug", dir: "up", text: "Weekly active users passed 30 for the first time, up from 24 in July." },
-          { date: "14 Aug", dir: "up", text: "Ren Kapoor added as an admin. First new admin since March." },
-          { date: "2 Aug", dir: "up", text: "Cleared onboarding on day 26, four days inside the normal window." },
-          { date: "19 Jul", dir: "down", text: "No exec sponsor has been named since the deal closed. Day 34 of adoption." },
-        ],
-        promises: [
-          { state: "done", text: "Send the saved-reports walkthrough. Sent 2 September, opened twice." },
-          { state: "open", text: "Introduce Ren to support. Not done — he still hasn't been contacted." },
-        ],
-        asked: [{ state: "open", text: "Whether reporting can be scheduled weekly. Answered informally; nothing written down." }],
-        raise: [
-          { what: "Say the numbers back to her", why: "This account is going well and nobody has told her. She is three weeks into the role." },
-          { what: "Ask what Ren is going to own", why: "He is the first new admin since March and has never been contacted by anyone here." },
-          { what: "Name a sponsor", why: "Day 34 of a stage that clears in 45. It is the only marker off-pattern." },
-        ],
-        leave: "Nothing to hold back. This is the one call this week where you can spend the time asking rather than explaining.",
+            "day": "Tuesday",
+            "date": "15 September",
+            "value": "£121k",
+            "note": "",
+            "calls": [
+                  {
+                        "id": "cobalt",
+                        "time": "14:00",
+                        "account": "Cobalt Systems",
+                        "person": "Marta Lind",
+                        "headline": "Going well and nobody has told her — she's three weeks into the role",
+                        "money": "£88k",
+                        "read": true,
+                        "flag": null
+                  },
+                  {
+                        "id": "trellis",
+                        "time": "16:00",
+                        "account": "Trellis",
+                        "person": "Nina Okafor",
+                        "headline": "Clicked the case study on 27 August and has said nothing since",
+                        "money": "£33k",
+                        "read": true,
+                        "flag": null
+                  }
+            ]
       },
       {
-        account: "Meridian Health", person: "Alex Renn, Director of Ops", when: "Wed 11:00", read: true,
-        money: "£88k", renews: "22 May", lastSpoke: "26 August",
-        waiting: "A renewal proposal has been finished and unsent for six days. It is in your Gmail.",
-        people: [
-          { name: "Alex Renn", role: "inherited the account in July", note: "the previous sponsor never handed over. Replied 26 Aug.", onCall: true },
-          { name: "Dana Whitlock", role: "the previous sponsor", note: "left in July. Everything agreed with her is undocumented.", onCall: false },
-        ],
-        changed: [
-          { date: "3 Sep", dir: "down", text: "Renewal proposal finished and not sent. Six days." },
-          { date: "28 Aug", dir: "down", text: "Ticket volume doubled in August, all of it from one team." },
-          { date: "14 Jul", dir: "flat", text: "Usage flat for four quarters at 22 of 30 seats." },
-        ],
-        promises: [
-          { state: "missed", text: "Write up what was agreed with Dana. Asked for on 26 August, not done." },
-          { state: "done", text: "Get him admin access. Done 27 August." },
-        ],
-        asked: [{ state: "missed", text: "A summary of the original commitments. Asked twice, never sent." }],
-        raise: [
-          { what: "Send the proposal before the call", why: "Six days old. Arriving after the conversation reads as an afterthought." },
-          { what: "Ask what he inherited and what he was never told", why: "Dana left in July and nothing was written down. He is guessing." },
-          { what: "The ticket spike is one team", why: "Volume doubled in August from a single team. Find out which before it becomes the renewal story." },
-        ],
-        leave: "Don't push for an uplift. Flat usage for four quarters won't support it, and asking turns a renewal into a negotiation.",
+            "day": "Wednesday",
+            "date": "16 September",
+            "value": "£246k",
+            "note": "2 packs unread",
+            "calls": [
+                  {
+                        "id": "meridian",
+                        "time": "11:00",
+                        "account": "Meridian Health",
+                        "person": "Alex Renn",
+                        "headline": "A proposal has been finished and unsent for six days",
+                        "money": "£88k",
+                        "read": true,
+                        "flag": "Proposal unsent"
+                  },
+                  {
+                        "id": "northwind",
+                        "time": "13:30",
+                        "account": "Northwind Rail",
+                        "person": "Tom Verity",
+                        "headline": "Hiring three ops analysts — the biggest account with no plan against it",
+                        "money": "£112k",
+                        "read": false,
+                        "flag": null
+                  },
+                  {
+                        "id": "redwing",
+                        "time": "16:30",
+                        "account": "Redwing",
+                        "person": "Cara Milne",
+                        "headline": "A 20% offer has been sitting unsent in your Gmail for nine days",
+                        "money": "£46k",
+                        "read": false,
+                        "flag": null
+                  }
+            ]
       },
       {
-        account: "Talia Foods", person: "Jo Bergström, Operations admin", when: "Thu 09:30", read: true,
-        money: "£61k", renews: "14 Jan", lastSpoke: "1 September",
-        waiting: null,
-        people: [
-          { name: "Jo Bergström", role: "admin", note: "replied 1 Sep. The only person who has ever replied.", onCall: true },
-          { name: "Nobody", role: "exec sponsor", note: "named in March, gone in June, nobody since.", onCall: false },
-        ],
-        changed: [
-          { date: "1 Sep", dir: "up", text: "Passed 80% of seats. Nothing breaks at 100%, but it is worth knowing first." },
-          { date: "19 Aug", dir: "up", text: "New admin added, already opening reports weekly." },
-          { date: "1 Jul", dir: "flat", text: "Usage flat since July, which is normal for them." },
-        ],
-        promises: [{ state: "done", text: "Send the seat forecast. Sent 2 September." }],
-        asked: [],
-        raise: [
-          { what: "The seat threshold is a conversation, not a bill", why: "80% with six weeks to renewal. Raise it now and it isn't a surprise later." },
-          { what: "Name a sponsor", why: "Six weeks out and there hasn't been one since June. Late, but not too late." },
-          { what: "Nothing else", why: "This is a short call and there is no third thing worth its time." },
-        ],
-        leave: "Don't fill the half hour. Ending early on a healthy account is a signal in itself.",
+            "day": "Thursday",
+            "date": "17 September",
+            "value": "£122k",
+            "note": "1 pack unread",
+            "calls": [
+                  {
+                        "id": "talia",
+                        "time": "09:30",
+                        "account": "Talia Foods",
+                        "person": "Jo Bergström",
+                        "headline": "Passed 80% of seats, and six weeks out with no sponsor",
+                        "money": "£61k",
+                        "read": true,
+                        "flag": null
+                  },
+                  {
+                        "id": "kestrel",
+                        "time": "14:00",
+                        "account": "Kestrel Group",
+                        "person": "Jo Bergström",
+                        "headline": "No admin at all since 12 August, and a draft is waiting in your Gmail",
+                        "money": "£61k",
+                        "read": false,
+                        "flag": "Draft unsent"
+                  }
+            ]
       },
       {
-        account: "Ardent Rail", person: "Sam Idowu, COO", when: "Fri 15:00", read: false,
-        money: "£39k", renews: "2 Feb", lastSpoke: "6 August",
-        waiting: "The assignment that watches this account has been blind since 29 August. Nothing has been sent, and nothing was flagged.",
-        people: [
-          { name: "Sam Idowu", role: "COO · the only engaged contact", note: "hasn't opened anything in 34 days, against a 30-day line.", onCall: true },
-          { name: "Six other named contacts", role: "in HubSpot", note: "none has engaged since May.", onCall: false },
-        ],
-        changed: [
-          { date: "5 Sep", dir: "down", text: "Sam crossed 30 days quiet. Nobody was told — Chase quiet champions is blind." },
-          { date: "6 Aug", dir: "down", text: "Last thing he opened. Nothing since." },
-          { date: "12 Jul", dir: "flat", text: "Seats unchanged since June. Usage low but steady." },
-        ],
-        promises: [{ state: "missed", text: "Send the integration timeline. Promised on 6 August, five weeks ago." }],
-        asked: [{ state: "missed", text: "Whether the API rate limit can be raised. Asked 6 August, unanswered." }],
-        raise: [
-          { what: "Ask directly whether this is still a priority", why: "Thirty-four days silent from the only person engaged. The polite version of this question wastes the call." },
-          { what: "Get a second name", why: "Six other contacts, none engaged since May. One contact on a renewal is thin." },
-          { what: "If he has moved on, say so", why: "A clear no is worth more than another quarter of chasing." },
-        ],
-        leave: "Don't apologise for the silence or bring up the unanswered API question first. Ask the direct question while you have him.",
-      },
-    ],
+            "day": "Friday",
+            "date": "18 September",
+            "value": "£39k",
+            "note": "1 pack unread",
+            "calls": [
+                  {
+                        "id": "ardent",
+                        "time": "15:00",
+                        "account": "Ardent Rail",
+                        "person": "Sam Idowu",
+                        "headline": "34 days silent from the only contact who has ever engaged",
+                        "money": "£39k",
+                        "read": false,
+                        "flag": "Watcher blind"
+                  }
+            ]
+      }
+],
   } },
 
   "Rank today's list before dialling": { layout: "sequence", run: "Today, 6:40 am · gone at 6 pm", single: {
