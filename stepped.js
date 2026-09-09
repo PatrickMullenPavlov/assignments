@@ -1,3 +1,5 @@
+import { ACCOUNTS, SETS, count, pct } from "./cohort.js";
+
 /* The stepped view: assignment → subjects → the work.
 
    THE RULE, settled earlier: column 2 exists when THE RUN produced more
@@ -181,11 +183,13 @@ CANVAS.document = (it) => `
    one account: the definition, the mechanism, the efficacy against a held
    back group, and what has actually been learned. */
 
+const D = (k, text) => `<button class="door" type="button" data-set="${k}">${text ?? count(k)}</button>`;
+
 CANVAS.report = (it) => `
   <div class="canvas-head">
     <div>
       <h2>${it.name}</h2>
-      <p class="canvas-verdict"><strong>${it.verdict}</strong> ${it.verdictLine}</p>
+      <p class="canvas-verdict"><strong>${it.verdict}</strong> ${D("converted")} of ${D("reached")} came back, against 5 of 94 we deliberately left alone. That is inside the noise — the emails are fine, the cohort is wrong.</p>
       <p class="canvas-meta">${it.meta}</p>
     </div>
     <div class="canvas-actions tight">
@@ -195,71 +199,91 @@ CANVAS.report = (it) => `
   </div>
 
   <div class="def-strip">
-    ${it.defs
-      .map(
-        (d) => `<div class="def">
-          <h3>${d.h}</h3>
-          <p>${d.p}</p>
-          <span class="def-where">${d.where}</span>
-        </div>`,
-      )
-      .join("")}
+    ${it.defs.map((d) => `<div class="def"><h3>${d.h}</h3><p>${d.p}</p><span class="def-where">${d.where}</span></div>`).join("")}
   </div>
 
   <h3 class="canvas-h">The work, and who is standing where</h3>
   <ol class="flowsteps">
-    ${it.steps
-      .map(
-        (st) =>
-          st.wait
-            ? `<li class="wait"><span>${st.wait}</span>${st.here ? `<span class="wait-here">${st.here}</span>` : ""}</li>`
-            : `<li class="${st.kind}">
-                 <span class="fs-n">${st.n}</span>
-                 <span class="fs-b">
-                   <span class="fs-t">${st.t}</span>
-                   <span class="fs-s">${st.s}</span>
-                 </span>
-                 <span class="fs-through">${st.through}</span>
-                 <span class="fs-tag">${st.tag}</span>
-               </li>`,
-      )
-      .join("")}
+    <li class="trigger">
+      <span class="fs-n">T</span>
+      <span class="fs-b"><span class="fs-t">The trial ended 30 days ago and nothing converted</span>
+        <span class="fs-s">checked every Tuesday against the cohort</span></span>
+      <span class="fs-through">${D("reached")} entered</span>
+      <span class="fs-tag">trigger</span>
+    </li>
+    <li class="wait"><span>straight away</span></li>
+    <li class="send">
+      <span class="fs-n">1</span>
+      <span class="fs-b"><span class="fs-t">Ask what stopped them</span>
+        <span class="fs-s">a plain question — no pitch, no link, no offer</span></span>
+      <span class="fs-through">${D("reached")} sent · ${D("opened")} opened</span>
+      <span class="fs-tag">sends itself</span>
+    </li>
+    <li class="wait"><span>then 14 days, if no reply</span><span class="wait-here">${D("wait1")} sitting here now</span></li>
+    <li class="send">
+      <span class="fs-n">2</span>
+      <span class="fs-b"><span class="fs-t">Send the case study closest to their use case</span>
+        <span class="fs-s">picked from what they actually used during the trial</span></span>
+      <span class="fs-through">84 sent · ${D("clicked")} clicked</span>
+      <span class="fs-tag">sends itself</span>
+    </li>
+    <li class="wait"><span>then 14 days, if no reply</span><span class="wait-here">${D("wait2")} sitting here now</span></li>
+    <li class="needs">
+      <span class="fs-n">3</span>
+      <span class="fs-b"><span class="fs-t">Offer 20% for the first year</span>
+        <span class="fs-s">written into the owner's Gmail, unsent</span></span>
+      <span class="fs-through">61 written · ${D("step3")} unsent</span>
+      <span class="fs-tag">needs you</span>
+    </li>
+    <li class="wait"><span>then it stops</span><span class="wait-here">${D("left")} have left · ${D("inflight")} still inside</span></li>
   </ol>
   <p class="canvas-after">${it.stopsWhen}</p>
 
   <h3 class="canvas-h">Did it work</h3>
   <div class="funnel">
-    ${it.funnel
+    ${[["reached", 10], ["opened", 7], ["clicked", 4], ["replied", 3], ["converted", 2]]
       .map(
-        (f, i) =>
-          `<div class="fn" style="flex-grow:${f[2]}">
-             <div class="fn-bar"><span style="width:${f[2] * 10}%"></span></div>
-             <span class="fn-n">${f[0]}</span>
-             <span class="fn-l">${f[1]}</span>
-           </div>`,
+        ([k, w]) => `<div class="fn" style="flex-grow:${w}">
+          <div class="fn-bar"><span style="width:${w * 10}%"></span></div>
+          ${D(k)}<span class="fn-l">${SETS[k].label}</span>
+        </div>`,
       )
       .join("")}
   </div>
   <div class="held">
-    <div><span class="held-n">${it.held.treated}</span><span class="held-l">${it.held.treatedL}</span></div>
-    <div><span class="held-n quiet">${it.held.control}</span><span class="held-l">${it.held.controlL}</span></div>
+    <div><span class="held-n">${D("converted")} of ${D("reached")}</span><span class="held-l">came back after being contacted — ${pct("converted", "reached")}</span></div>
+    <div><span class="held-n quiet">5 of 94</span><span class="held-l">came back with no contact at all — 5.3%</span></div>
     <p class="held-say">${it.held.say}</p>
   </div>
 
   <h3 class="canvas-h">What actually works</h3>
   <div class="canvas-cols">
-    ${it.insight
-      .map(
-        (t) => `<div>
-          <h4 class="sub-h">${t.h}</h4>
-          <div class="table set-table" style="--set-cols:${t.widths}">
-            <div class="row head">${t.cols.map((c) => `<span>${c}</span>`).join("")}</div>
-            ${t.rows.map((r) => `<div class="row item${r.hot ? " hot" : ""}">${r.c.map((c) => `<span>${c}</span>`).join("")}</div>`).join("")}
-          </div>
-          <p class="canvas-after">${t.note}</p>
-        </div>`,
-      )
-      .join("")}
+    <div>
+      <h4 class="sub-h">Which email does the work</h4>
+      <div class="table set-table" style="--set-cols:1fr 58px 62px 62px">
+        <div class="row head"><span>Step</span><span>Sent</span><span>Clicked</span><span>Replied</span></div>
+        <div class="row item"><span>1 · Ask what stopped them</span><span>${D("reached")}</span><span>4%</span><span>6%</span></div>
+        <div class="row item hot"><span>2 · The closest case study</span><span>84</span><span>11%</span><span>9%</span></div>
+        <div class="row item"><span>3 · 20% for the first year</span><span>61</span><span>7%</span><span>3%</span></div>
+      </div>
+      <p class="canvas-after">The case study is the only step that moves anything. The discount converts worse than the plain question — people who want a discount ask for one.</p>
+    </div>
+    <div>
+      <h4 class="sub-h">Which accounts come back</h4>
+      <div class="table set-table" style="--set-cols:1fr 74px 88px">
+        <div class="row head"><span>How much of the trial they used</span><span>Accounts</span><span>Came back</span></div>
+        ${["heavy", "some", "once"]
+          .map(
+            (b) => `<div class="row item${b === "heavy" ? " hot" : ""}">
+              <span>${SETS[b].label.replace(/^\w/, (c) => c.toUpperCase())}</span>
+              <span>${D(b)}</span>
+              <span>${D(b + "-back", pct(b + "-back", b))}</span>
+            </div>`,
+          )
+          .join("")}
+      </div>
+      <p class="canvas-after">Half the cohort never really tried the product. They are dragging the whole number down, and no email fixes that. Narrow the cohort to 5+ days and the rate is ${pct("heavy-back", "heavy")}.</p>
+    </div>
   </div>
 
   <h3 class="canvas-h">Run by run</h3>
@@ -278,50 +302,35 @@ CANVAS.report = (it) => `
     </div>
   </div>`;
 
-/* A BATCH OF DRAFTS — Trig has written them; a person decides which go.
-   Trig does not send: the bulk action puts the chosen ones into the
-   owner's Gmail, and sending happens there. Nothing here composes. */
-
-CANVAS.drafts = (it) => `
+/* Opening a count: the same accounts, listed. */
+CANVAS.set = (key) => {
+  const rows = SETS[key].of();
+  return `
   <div class="canvas-head">
     <div>
-      <h2>${it.name}</h2>
-      <p class="canvas-meta">${it.meta}</p>
+      <button class="back-report" type="button" data-back-report>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        The report
+      </button>
+      <h2>${rows.length} ${SETS[key].label}</h2>
+      <p class="canvas-meta">Every one of them, not a sample. Win back lapsed trials · run Tuesday 2 September.</p>
     </div>
   </div>
-
-  <div class="bulkbar" data-bulk>
-    <label class="cb all"><input type="checkbox" data-all checked><span></span></label>
-    <span class="bulk-count"><strong data-count>12</strong> of ${it.rows.length} selected</span>
-    <span class="bulk-note">The ${it.rows.filter((r) => r.flag).length} flagged below start unticked.</span>
-    <button class="btn primary" type="button" data-place>Put <span data-count2>12</span> in my Gmail</button>
-  </div>
-
-  <div class="table drafts-table">
-    <div class="row head">
-      <span></span><span>Deal</span><span>What fired</span><span>Who it goes to, and how it opens</span><span></span>
-    </div>
-    ${it.rows
+  <div class="table set-table" style="--set-cols:180px 176px 200px 1fr 66px">
+    <div class="row head"><span>Account</span><span>Trial use</span><span>Where they are</span><span>What happened</span><span>When</span></div>
+    ${rows
       .map(
-        (r, i) => `
-      <div class="row item draft${r.flag ? " flagged" : ""}" data-draft="${i}">
-        <label class="cb"><input type="checkbox" data-row${r.flag ? "" : " checked"}><span></span></label>
-        <span class="d-deal">${r.deal}</span>
-        <span class="d-fired">${r.fired}</span>
-        <span class="d-who">
-          <span class="d-open">${r.who} — &ldquo;${r.opens}&rdquo;</span>
-          ${r.flag ? `<span class="d-flag">${r.flag}</span>` : ""}
-          <span class="d-full">${r.body}</span>
-        </span>
-        <span class="d-act">
-          <button class="btn sm" type="button" data-read="${i}">Read</button>
-        </span>
-      </div>`,
+        (a) => `<div class="row item">
+          <span>${a.name}</span>
+          <span class="q">${a.bandLabel}</span>
+          <span>${a.positionLabel}</span>
+          <span class="q">${a.what}</span>
+          <span class="q">${a.when}</span>
+        </div>`,
       )
       .join("")}
-  </div>
-
-  <p class="canvas-after">${it.after}</p>`;
+  </div>`;
+};
 
 /* A run that produced nothing. Not a layout — a STATE any layout can be
    in, so it renders above whatever the layout would have shown.         */
@@ -482,7 +491,7 @@ export const RUNS = {
     normallyNote: "One nudge per champion, worked through one at a time. There would be 18 in the column beside this." } },
 
   "Win back lapsed trials": { layout: "batch", run: "Tuesday 2 Sep, 6:40 am · 12 touched", noun: "Accounts",
-    report: {
+    single: {
       shape: "report",
       name: "Win back lapsed trials",
       verdict: "Not moving.",
@@ -550,60 +559,7 @@ export const RUNS = {
         ["21 Jul", "Turned on by Marcus Ade, with 94 accounts held back on purpose."],
       ],
     },
-    groups: [
-      { label: "Waiting after step 1 · 4", items: [
-        { id: "a1", name: "Bevan &amp; Co", sub: "asked 2 Sep · 9 days in the wait", shape: "batch",
-          meta: "In the 14-day wait after step 1 · opened it, did not reply",
-          why: ["Trial ended 4 August. Used the product on 6 days.", "Opened step 1 twice but has not answered."],
-          did: ["Step 1 sent 2 September. Opened 2 September and again on the 4th.", "Step 2 is due on 16 September unless they reply first."] },
-        { id: "a2", name: "Kestrel Labs", sub: "asked 2 Sep · 9 days in the wait", shape: "batch",
-          meta: "In the 14-day wait after step 1 · not opened",
-          why: ["Trial ended 29 July. Signed up and opened it once.", "In the half of the cohort that comes back 2% of the time."],
-          did: ["Step 1 sent 2 September. Not opened.", "Step 2 is due on 16 September."] } ] },
-
-      { label: "Waiting after step 2 · 8", items: [
-        { id: "a3", name: "Marchmont", sub: "case study sent 2 Sep · not opened", shape: "batch",
-          meta: "In the 14-day wait after step 2 · neither email opened",
-          why: ["Trial ended 2 May. Signed up, opened it once, never came back.", "Two emails sent, neither opened."],
-          did: ["Step 1 on 19 August. Not opened.", "Step 2 on 2 September with the reporting case study. Not opened.", "Step 3 is the discount, and it is due on 16 September."] },
-        { id: "a4", name: "Trellis", sub: "case study sent 26 Aug · clicked", shape: "batch",
-          meta: "In the 14-day wait after step 2 · clicked, did not reply",
-          why: ["Trial ended 11 June. Used it on 7 days — the top third of the cohort.", "Clicked the case study on 27 August and read it for four minutes."],
-          did: ["Step 1 on 12 August. Opened, no reply.", "Step 2 on 26 August. Clicked the next day, no reply since.", "Step 3 is due on 9 September. It is worth reaching them first."] } ] },
-
-      { label: "At step 3, waiting on you · 12", tone: "warn", items: [
-        { id: "a5", name: "Redwing", sub: "discount written 2 Sep · unsent", shape: "batch",
-          meta: "Step 3 · in Kish's Gmail, unsent for 9 days",
-          why: ["Trial ended 21 June. Used it on 11 days, the heaviest user in the cohort.", "Replied to nothing, but opened every email."],
-          did: ["Steps 1 and 2 sent. Both opened, no reply.", "A 20% offer was written into Kish's Gmail on 2 September and has not been sent."] },
-        { id: "a6", name: "Cassidy Group", sub: "discount written 26 Aug · unsent", shape: "batch",
-          meta: "Step 3 · in Mia's Gmail, unsent for 16 days",
-          why: ["Trial ended 3 May. Used it on 5 days.", "Asked about pricing during the trial and never got an answer."],
-          did: ["Steps 1 and 2 sent. Step 1 opened.", "A 20% offer was written on 26 August. It has been sitting for over a fortnight."] } ] },
-
-      { label: "Left — came back · 7", items: [
-        { id: "a7", name: "Orvis", sub: "converted 3 Sep", shape: "batch",
-          meta: "Left the machine on 3 September · converted",
-          why: ["Trial ended 14 June. Used the product on 9 separate days.", "Opened the pricing page twice in August."],
-          did: ["Step 1 on 19 August. Opened, no reply.", "Step 2 on 2 September with the reporting case study. Replied the next day asking about seats.", "Left the sequence at step 2. No discount was ever offered."] },
-        { id: "a8", name: "Fenwick", sub: "converted 21 Aug", shape: "batch",
-          meta: "Left the machine on 21 August · converted",
-          why: ["Trial ended 30 April. Used it on 8 days."],
-          did: ["Step 1 on 5 August. Replied within the hour.", "Left at step 1. The other two steps never ran."] } ] },
-
-      { label: "Left — replied, didn't buy · 5", items: [
-        { id: "a11", name: "Halverson", sub: "replied 14 Aug · said no", shape: "batch",
-          meta: "Left the machine on 14 August · answered, and the answer was no",
-          why: ["Trial ended 2 June. Used it on 6 days.", "Replied to step 1 within a day."],
-          did: ["Step 1 on 12 August. Replied 14 August: they had bought something else in May.", "Left at step 1. No case study, no discount — there was nothing to win back."] } ] },
-
-      { label: "Left — went silent · 60", items: [
-        { id: "a9", name: "Pentworth", sub: "all three steps, no open", shape: "batch",
-          meta: "Left the machine on 1 September · nothing was opened",
-          why: ["Trial ended 12 March. Signed up, opened it once, never returned.", "Three emails, no open, no click, no reply."],
-          did: ["Steps 1, 2 and 3 all sent. Nothing was opened.", "Stopped after step 3. It will not try again."] } ] },
-
-    ] },
+  },
 
   /* ---- SINGLE ARTEFACT — column 2 stays ---------------------------------- */
 

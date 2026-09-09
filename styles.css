@@ -862,3 +862,21 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .draft[data-open] .d-full { display: block; }
 .draft[data-open] .d-open { color: var(--ink-3); }
 .d-act { display: flex; justify-content: flex-end; }
+
+/* every count in a report is a door to the accounts behind it */
+.door {
+  border: 0; background: none; padding: 0; font: inherit; color: inherit;
+  cursor: pointer; text-decoration: underline; text-decoration-color: var(--hair);
+  text-underline-offset: 3px;
+}
+.door:hover { text-decoration-color: currentColor; }
+.fn .door { display: block; font-size: var(--t-lg); font-variant-numeric: tabular-nums; text-align: left; }
+.held-n .door { color: inherit; }
+.set-table .row.item .q { color: var(--ink-2); }
+
+.back-report {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px -4px;
+  border: 0; background: none; padding: 4px; font: inherit;
+  font-size: var(--t-sm); color: var(--ink-2); cursor: pointer; border-radius: 5px;
+}
+.back-report:hover { color: var(--ink); background: var(--panel2); }
