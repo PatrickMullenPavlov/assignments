@@ -34,7 +34,7 @@ const ITEMS = [
       "Three champions crossed 30 days quiet while it couldn't see. One is on day 41.",
     ],
     did: [
-      "Carried on running to schedule, 11 days, 40 runs.",
+      "Carried on running to schedule for 11 days and 8 runs.",
       "Found nothing each time — which looks identical to a quiet fortnight.",
       "Flagged it here once the gap in reads was long enough to be certain.",
     ],
@@ -88,7 +88,7 @@ const ITEMS = [
     subject: "assignment", name: "Chase quiet champions", kind: "decision",
     owner: null, perRep: { Lazlo: "Itself · 5 of your champions", Mia: "Itself · 4 of your champions", "Cabbage Mick": "Itself · 3 of your champions", Yan: "Itself · 2 of your champions", Kish: "Itself · 4 of your champions" },
     line: "Eight runs since 29 August, all of them finding nothing. It is blind, not quiet — see HubSpot above.",
-    blocks: "Itself · 18 accounts", whose: "You", age: "40 runs",
+    blocks: "Itself · 18 champions", whose: "You", age: "8 runs",
     inlineVerb: null,
     why: [
       "0 output across 8 consecutive runs since 29 August.",

@@ -1,6 +1,6 @@
 /* What the silent assignments actually did.
 
-   "412 records written today" and "40 runs that found nothing" are claims
+   "412 records written today" and "8 runs that found nothing" are claims
    until you can open them. These are the lists behind those numbers.
    Long ones are truncated honestly — the drawer says how many it is
    showing and of what, rather than implying the list is the whole thing. */
