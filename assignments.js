@@ -118,7 +118,7 @@ const ASSIGNMENTS = [
 ];
 
 import { onFilterChange } from "./filter.js";
-import { RUNS, CANVAS, WEEKCALLS } from "./stepped.js";
+import { RUNS, CANVAS, WEEKCALLS, DIALS } from "./stepped.js";
 import { SETS } from "./cohort.js";
 import { showDrawer, hideDrawer } from "./drawer.js";
 
@@ -283,8 +283,11 @@ view.addEventListener("click", (e) => {
   if (rn) return showDrawer(CANVAS.renewal(rn.dataset.renewal));
   const champ = e.target.closest("[data-champ]");
   if (champ) return showDrawer(CANVAS.champs(champ.dataset.champ));
-  const call = e.target.closest("[data-call]");
-  if (call) return showDrawer(CANVAS.pack(call.dataset.call));
+  const pk = e.target.closest("[data-pack]");
+  if (pk) {
+    const id = pk.dataset.pack;
+    return showDrawer(id in DIALS ? CANVAS.dial(id) : CANVAS.pack(id));
+  }
   const dayT = e.target.closest("[data-day-toggle]");
   if (dayT) return dayT.closest(".wk-day").toggleAttribute("data-open");
 

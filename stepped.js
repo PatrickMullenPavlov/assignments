@@ -324,7 +324,7 @@ CANVAS.champs = (kind) => {
    collapse; a call opens its pack in the drawer. The pack itself is
    unchanged, it has just stopped being the top level. */
 
-CANVAS.week = (it) => `
+CANVAS.agenda = (it) => `
   <div class="canvas-head">
     <div>
       <h2>${it.name}</h2>
@@ -333,36 +333,34 @@ CANVAS.week = (it) => `
   </div>
 
   <div class="wk-summary">
-    <div><span class="rn-n">${it.days.reduce((n, d) => n + d.calls.length, 0)}</span><span class="rn-l">calls this week</span></div>
-    <div><span class="rn-n">${it.totalValue}</span><span class="rn-l">of book in the room</span></div>
-    <div><span class="rn-n">${it.days.reduce((n, d) => n + d.calls.filter((c) => !c.read).length, 0)}</span><span class="rn-l">packs you haven't opened</span></div>
+    ${it.figures.map((f) => `<div><span class="rn-n">${f[0]}</span><span class="rn-l">${f[1]}</span></div>`).join("")}
     <p class="rn-say">${it.say}</p>
   </div>
 
-  ${it.days
+  ${it.groups
     .map(
-      (d) => `
-    <section class="wk-day" data-day="${d.day}"${d.collapsed ? "" : " data-open"}>
-      <button class="wk-head" type="button" data-day-toggle="${d.day}">
+      (g) => `
+    <section class="wk-day"${g.collapsed ? "" : " data-open"}>
+      <button class="wk-head" type="button" data-day-toggle>
         <svg class="wk-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        <span class="wk-d">${d.day}</span>
-        <span class="wk-date">${d.date}</span>
-        <span class="wk-n">${d.calls.length} ${d.calls.length === 1 ? "call" : "calls"}</span>
-        <span class="wk-v">${d.value}</span>
-        ${d.note ? `<span class="wk-note">${d.note}</span>` : ""}
+        <span class="wk-d">${g.label}</span>
+        ${g.sub ? `<span class="wk-date">${g.sub}</span>` : ""}
+        <span class="wk-n">${g.count}</span>
+        ${g.meta ? `<span class="wk-v">${g.meta}</span>` : ""}
+        ${g.note ? `<span class="wk-note">${g.note}</span>` : ""}
       </button>
       <div class="wk-calls">
-        ${d.calls
+        ${g.items
           .map(
             (c) => `
-          <button class="wk-call" type="button" data-call="${c.id}">
-            <span class="wk-time">${c.time}</span>
+          <button class="wk-call${c.open === false ? " flat" : ""}" type="button"${c.open === false ? "" : ` data-pack="${c.id}"`}>
+            <span class="wk-time">${c.lead}</span>
             <span class="wk-body">
-              <span class="wk-acct">${c.account}<em>${c.person}</em></span>
+              <span class="wk-acct">${c.title}${c.person ? `<em>${c.person}</em>` : ""}</span>
               <span class="wk-line">${c.headline}</span>
             </span>
-            <span class="wk-meta">${c.money}</span>
-            <span class="wk-state${c.read ? "" : " unread"}">${c.read ? "Read" : "Not opened"}</span>
+            <span class="wk-meta">${c.right ?? ""}</span>
+            ${c.state ? `<span class="wk-state${c.state === "Not opened" ? " unread" : ""}">${c.state}</span>` : "<span></span>"}
             ${c.flag ? `<span class="wk-flag">${c.flag}</span>` : ""}
           </button>`,
           )
@@ -371,6 +369,41 @@ CANVAS.week = (it) => `
     </section>`,
     )
     .join("")}`;
+
+
+/* a dialling pack — what you need in the thirty seconds before you ring */
+CANVAS.dial = (id) => {
+  const p = DIALS[id];
+  return `
+    <header>
+      <div>
+        <p class="drawer-kind">Number ${p.rank} today · ${p.mins}</p>
+        <h2>${p.account}</h2>
+        <p>${p.person} · ${p.meta}</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body">
+      ${p.flag ? `<p class="pack-waiting flush">${p.flag} — deal with it before you dial, not after.</p>` : ""}
+
+      <h3>Why it is number ${p.rank}</h3>
+      <p class="rn-p">${p.why}</p>
+
+      <h3>How to open</h3>
+      <p class="opener">“${p.opener}”</p>
+
+      <h3>Have these ready</h3>
+      <ul class="ev">${p.ready.map((r) => `<li>${r}</li>`).join("")}</ul>
+
+      <h3>Last time you spoke</h3>
+      <p class="rn-p">${p.last}</p>
+
+      <h3>If it goes badly</h3>
+      <p class="rn-p">${p.ifno}</p>
+    </div>`;
+};
 
 /* one call's pack, in the drawer */
 CANVAS.pack = (id) => {
@@ -696,6 +729,145 @@ CANVAS.set = (key) => {
    value over the weeks left before the notice window shuts. */
 
 const TREND = { rising: "↑", falling: "↓", flat: "→", stalled: "→" };
+
+export const DIALS = {
+  "halcyon-d": {
+    "rank": "1",
+    "account": "Halcyon",
+    "person": "Ruth Ellery",
+    "meta": "£142k · renews 12 Nov · last spoke 22 August",
+    "mins": "12 min",
+    "why": "Both ops admins gone 43 days and the renewal is 10 weeks out. Highest value at risk on the book.",
+    "opener": "Ruth — before Monday, can I ask who picked up the reporting when Priya and Tom came off?",
+    "ready": [
+      "Ticket 4412, open nine days with no reply from us",
+      "The seat count: 42 to 40 on 27 August",
+      "That API traffic is up 40% and you don't know who is driving it"
+    ],
+    "last": "22 August. She asked about SSO pricing and never got an answer — lead with that if it comes up.",
+    "ifno": "If she has no time: the one question worth the call is who replaced the two admins. Everything else can wait.",
+    "flag": null
+  },
+  "ferrovia-d": {
+    "rank": "2",
+    "account": "Ferrovia",
+    "person": "Marc Oyelaran",
+    "meta": "£96k · renews 3 Dec · last spoke 19 August",
+    "mins": "10 min",
+    "why": "Eight days from go-live and it hasn't moved since 21 August. Three emails, no reply to any.",
+    "opener": "Marc — we're eight days out and I'd rather ask than guess. What's actually holding this up?",
+    "ready": [
+      "The go-live checklist, and which two items are outstanding",
+      "That six other contacts have never replied to anything",
+      "The assignment stopped chasing on 6 September — this is now a person's job"
+    ],
+    "last": "19 August. He replied then and nothing since. Three automated emails have gone out in between.",
+    "ifno": "If he says it's paused: get a date and who owns it. A vague 'soon' here is how this becomes a churn in December.",
+    "flag": "Handed over"
+  },
+  "kestrel-d": {
+    "rank": "3",
+    "account": "Kestrel Group",
+    "person": "Jo Bergström",
+    "meta": "£61k · renews 19 Dec · last spoke 14 August",
+    "mins": "8 min",
+    "why": "Two nudges unopened, and a draft is already sitting in your Gmail. Ring first, then send it.",
+    "opener": "Jo — I noticed both admin accounts came off in August. Rather than guess who picked it up, can you point me at them?",
+    "ready": [
+      "Both admins left on 12 August and nobody has been added",
+      "She is a CFO, which makes her the sponsor if she'll take it",
+      "The draft in your Gmail, so you can send it straight after"
+    ],
+    "last": "14 August. She replied. The two nudges since were never opened.",
+    "ifno": "If she pushes back: the ask is a name, not a meeting. One admin account is a five-minute fix.",
+    "flag": "Draft unsent"
+  },
+  "meridian-d": {
+    "rank": "4",
+    "account": "Meridian Health",
+    "person": "Alex Renn",
+    "meta": "£88k · renews 22 May · last spoke 26 August",
+    "mins": "8 min",
+    "why": "Ticket 4412 has been open nine days with no reply from us. They will raise it on Thursday if you don't.",
+    "opener": "Alex — before Thursday, I want to get ahead of something rather than have you raise it.",
+    "ready": [
+      "4412 and why it has sat for nine days",
+      "The proposal that has been finished and unsent for six",
+      "That Dana left in July and nothing was handed over"
+    ],
+    "last": "26 August. He asked for a summary of the original commitments, twice. Still not sent.",
+    "ifno": "If he is short: send the proposal on the call. Six days is already the story.",
+    "flag": null
+  },
+  "talia-d": {
+    "rank": "5",
+    "account": "Talia Foods",
+    "person": "Jo Bergström",
+    "meta": "£61k · renews 14 Jan · last spoke 1 September",
+    "mins": "10 min",
+    "why": "Renewal is six weeks out with no exec sponsor named, and they passed 80% of seats on 1 September.",
+    "opener": "Jo — two quick things before the renewal, and neither is a problem.",
+    "ready": [
+      "80% of seats, and what happens at 100%",
+      "That the sponsor named in March left in June",
+      "The seat forecast you sent on 2 September"
+    ],
+    "last": "1 September. Healthy account, nothing outstanding from either side.",
+    "ifno": "If she has no name to give: ask who signs the renewal. That is the sponsor whether they call it that or not.",
+    "flag": null
+  },
+  "redwing-d": {
+    "rank": "6",
+    "account": "Redwing",
+    "person": "Cara Milne",
+    "meta": "£46k · trial ended 21 June · last spoke 19 August",
+    "mins": "6 min",
+    "why": "A 20% offer was written nine days ago and never sent. Decide what you're doing before you ring.",
+    "opener": "Cara — you've opened everything I've sent and replied to none of it, so I'll just ask directly.",
+    "ready": [
+      "She used the trial on 11 days — the heaviest in her cohort",
+      "The offer, if you decide to send it",
+      "That price is probably not the blocker"
+    ],
+    "last": "19 August. She opened it. No reply, and none to anything since.",
+    "ifno": "If she is not interested: say so and stop. Opening every email and replying to none usually means someone else decides.",
+    "flag": "Offer unsent"
+  },
+  "ardent-d": {
+    "rank": "7",
+    "account": "Ardent Rail",
+    "person": "Sam Idowu",
+    "meta": "£39k · renews 2 Feb · last spoke 6 August",
+    "mins": "6 min",
+    "why": "Thirty-four days silent from the only contact who has ever engaged. A clear no is worth more than another quarter.",
+    "opener": "Sam — I'd rather ask straight out than keep sending things. Is this still a priority for you?",
+    "ready": [
+      "The integration timeline you promised on 6 August and never sent",
+      "His API rate-limit question, also unanswered",
+      "That six other contacts have engaged with nothing since May"
+    ],
+    "last": "6 August. He asked two questions and got neither answered. That may be the whole story.",
+    "ifno": "If he says it isn't a priority: get that in writing and stop. It frees the time and it is honest.",
+    "flag": "Watcher blind"
+  },
+  "pike-d": {
+    "rank": "8",
+    "account": "Pike & Rowe",
+    "person": "Ben Achebe",
+    "meta": "£47k · renews 3 Mar · last spoke 14 August",
+    "mins": "5 min",
+    "why": "Hiring two analytics engineers, which is a warm reason to call rather than a problem to fix.",
+    "opener": "Ben — saw you're hiring two analytics engineers. When they land they'll ask the same three questions everyone does.",
+    "ready": [
+      "The onboarding pack for new analysts",
+      "That they have two contacts in total, half the median for this size",
+      "Nothing commercial — this is a relationship call"
+    ],
+    "last": "14 August. Nothing outstanding.",
+    "ifno": "If it is a bad time: ask who the new hires will report to. That is the second name you need.",
+    "flag": null
+  }
+};
 
 export const WEEKCALLS = {
   "halcyon": {
@@ -1651,158 +1823,163 @@ export const RUNS = {
   /* ---- SEQUENCE — collapses to one stack -------------------------------- */
 
   "Prep my 1:1s": { layout: "sequence", run: "Today, 6:40 am · 1m 42s · closed", single: {
-    shape: "week",
+    shape: "agenda",
     name: "Your week",
     meta: "Eleven recurring customer calls, 14 to 18 September. Each pack is built at 6:40 am from what moved, what you promised, and what they asked for.",
-    totalValue: "£802k",
+    figures: [["11", "calls this week"], ["£802k", "of book in the room"], ["5", "packs you haven't opened"]],
     say: "Ordered by the diary, not by importance — the packs do the prioritising inside each day. Open a call to read its pack.",
-    days: [
+    groups: [
       {
-            "day": "Monday",
-            "date": "14 September",
-            "value": "£274k",
+            "label": "Monday",
+            "sub": "14 September",
+            "count": "3 calls",
+            "meta": "£274k",
             "note": "1 pack unread",
-            "calls": [
+            "items": [
                   {
                         "id": "halcyon",
-                        "time": "10:00",
-                        "account": "Halcyon",
+                        "lead": "10:00",
+                        "title": "Halcyon",
                         "person": "Ruth Ellery",
                         "headline": "Reporting stopped 43 days ago, both ops admins gone, renewal in 10 weeks",
-                        "money": "£142k",
-                        "read": false,
+                        "right": "£142k",
+                        "state": "Not opened",
                         "flag": "Draft unsent"
                   },
                   {
                         "id": "brightsea",
-                        "time": "11:30",
-                        "account": "Brightsea",
+                        "lead": "11:30",
+                        "title": "Brightsea",
                         "person": "Ana Rehn",
                         "headline": "Raised a Series B on 2 September — the ops team is about to double",
-                        "money": "£58k",
-                        "read": true,
+                        "right": "£58k",
+                        "state": "Read",
                         "flag": null
                   },
                   {
                         "id": "corvus",
-                        "time": "15:00",
-                        "account": "Corvus",
+                        "lead": "15:00",
+                        "title": "Corvus",
                         "person": "Marta Lind",
                         "headline": "One seat from a hard stop, and finance started using it unsold",
-                        "money": "£74k",
-                        "read": true,
+                        "right": "£74k",
+                        "state": "Read",
                         "flag": null
                   }
             ]
       },
       {
-            "day": "Tuesday",
-            "date": "15 September",
-            "value": "£121k",
+            "label": "Tuesday",
+            "sub": "15 September",
+            "count": "2 calls",
+            "meta": "£121k",
             "note": "",
-            "calls": [
+            "items": [
                   {
                         "id": "cobalt",
-                        "time": "14:00",
-                        "account": "Cobalt Systems",
+                        "lead": "14:00",
+                        "title": "Cobalt Systems",
                         "person": "Marta Lind",
                         "headline": "Going well and nobody has told her — she's three weeks into the role",
-                        "money": "£88k",
-                        "read": true,
+                        "right": "£88k",
+                        "state": "Read",
                         "flag": null
                   },
                   {
                         "id": "trellis",
-                        "time": "16:00",
-                        "account": "Trellis",
+                        "lead": "16:00",
+                        "title": "Trellis",
                         "person": "Nina Okafor",
                         "headline": "Clicked the case study on 27 August and has said nothing since",
-                        "money": "£33k",
-                        "read": true,
+                        "right": "£33k",
+                        "state": "Read",
                         "flag": null
                   }
             ]
       },
       {
-            "day": "Wednesday",
-            "date": "16 September",
-            "value": "£246k",
+            "label": "Wednesday",
+            "sub": "16 September",
+            "count": "3 calls",
+            "meta": "£246k",
             "note": "2 packs unread",
-            "calls": [
+            "items": [
                   {
                         "id": "meridian",
-                        "time": "11:00",
-                        "account": "Meridian Health",
+                        "lead": "11:00",
+                        "title": "Meridian Health",
                         "person": "Alex Renn",
                         "headline": "A proposal has been finished and unsent for six days",
-                        "money": "£88k",
-                        "read": true,
+                        "right": "£88k",
+                        "state": "Read",
                         "flag": "Proposal unsent"
                   },
                   {
                         "id": "northwind",
-                        "time": "13:30",
-                        "account": "Northwind Rail",
+                        "lead": "13:30",
+                        "title": "Northwind Rail",
                         "person": "Tom Verity",
                         "headline": "Hiring three ops analysts — the biggest account with no plan against it",
-                        "money": "£112k",
-                        "read": false,
+                        "right": "£112k",
+                        "state": "Not opened",
                         "flag": null
                   },
                   {
                         "id": "redwing",
-                        "time": "16:30",
-                        "account": "Redwing",
+                        "lead": "16:30",
+                        "title": "Redwing",
                         "person": "Cara Milne",
                         "headline": "A 20% offer has been sitting unsent in your Gmail for nine days",
-                        "money": "£46k",
-                        "read": false,
+                        "right": "£46k",
+                        "state": "Not opened",
                         "flag": null
                   }
             ]
       },
       {
-            "day": "Thursday",
-            "date": "17 September",
-            "value": "£122k",
+            "label": "Thursday",
+            "sub": "17 September",
+            "count": "2 calls",
+            "meta": "£122k",
             "note": "1 pack unread",
-            "calls": [
+            "items": [
                   {
                         "id": "talia",
-                        "time": "09:30",
-                        "account": "Talia Foods",
+                        "lead": "09:30",
+                        "title": "Talia Foods",
                         "person": "Jo Bergström",
                         "headline": "Passed 80% of seats, and six weeks out with no sponsor",
-                        "money": "£61k",
-                        "read": true,
+                        "right": "£61k",
+                        "state": "Read",
                         "flag": null
                   },
                   {
                         "id": "kestrel",
-                        "time": "14:00",
-                        "account": "Kestrel Group",
+                        "lead": "14:00",
+                        "title": "Kestrel Group",
                         "person": "Jo Bergström",
                         "headline": "No admin at all since 12 August, and a draft is waiting in your Gmail",
-                        "money": "£61k",
-                        "read": false,
+                        "right": "£61k",
+                        "state": "Not opened",
                         "flag": "Draft unsent"
                   }
             ]
       },
       {
-            "day": "Friday",
-            "date": "18 September",
-            "value": "£39k",
+            "label": "Friday",
+            "sub": "18 September",
+            "count": "1 call",
+            "meta": "£39k",
             "note": "1 pack unread",
-            "calls": [
+            "items": [
                   {
                         "id": "ardent",
-                        "time": "15:00",
-                        "account": "Ardent Rail",
+                        "lead": "15:00",
+                        "title": "Ardent Rail",
                         "person": "Sam Idowu",
                         "headline": "34 days silent from the only contact who has ever engaged",
-                        "money": "£39k",
-                        "read": false,
+                        "right": "£39k",
+                        "state": "Not opened",
                         "flag": "Watcher blind"
                   }
             ]
@@ -1811,24 +1988,174 @@ export const RUNS = {
   } },
 
   "Rank today's list before dialling": { layout: "sequence", run: "Today, 6:40 am · gone at 6 pm", single: {
-    shape: "sequence", name: "Today's list, ranked",
-    meta: "Looked at all 61. These 8 are worth the morning — about 65 minutes. Gone at 6 pm; a fresh one is built at 6:40 tomorrow.",
-    parts: [
-      { name: "1 · Halcyon", when: "12 min", read: false, meta: "£142k · renews 12 Nov",
-        leftTitle: "Why it's first", rightTitle: "How to open",
-        left: ["Both ops admins gone 43 days, renewal 10 weeks out.",
-               "Highest value at risk on the book."],
-        right: ["Ask who replaced the two admins before anything else."] },
-      { name: "2 · Ferrovia", when: "10 min", read: false, meta: "£96k · renews 3 Dec",
-        leftTitle: "Why it's second", rightTitle: "How to open",
-        left: ["8 days from go-live and hasn't moved since 21 August.",
-               "Three emails, no reply."],
-        right: ["Ask what is actually blocking go-live. Nobody has said."] },
-      { name: "3 · Kestrel Group", when: "8 min", read: false, meta: "£61k · renews 19 Dec",
-        leftTitle: "Why it's third", rightTitle: "How to open",
-        left: ["Two nudges unopened. A draft is already in Lazlo's Gmail."],
-        right: ["Ring first, then send the draft. It reads better after a call."] },
-    ] } },
+    shape: "agenda",
+    name: "Today's list, ranked",
+    meta: "Looked at all 61 accounts at 6:40 am. Eight are worth the morning. Gone at 6 pm — a fresh one is built tomorrow.",
+    figures: [["8", "worth ringing today"], ["65 min", "for all of them"], ["53", "have nothing new"]],
+    say: "Ranked by what today changes, not by value. The last group is what it deliberately left off, and why.",
+    groups: [
+      {
+            "label": "Ring these first",
+            "sub": "before 10:00",
+            "count": "3 calls",
+            "meta": "about 30 min",
+            "note": "today matters for all three",
+            "items": [
+                  {
+                        "id": "halcyon-d",
+                        "lead": "1",
+                        "title": "Halcyon",
+                        "person": "Ruth Ellery",
+                        "headline": "Both ops admins gone 43 days and the renewal is 10 weeks out. Highest value at risk on the book.",
+                        "right": "12 min",
+                        "state": null,
+                        "flag": null
+                  },
+                  {
+                        "id": "ferrovia-d",
+                        "lead": "2",
+                        "title": "Ferrovia",
+                        "person": "Marc Oyelaran",
+                        "headline": "Eight days from go-live and it hasn't moved since 21 August. Three emails, no reply to any.",
+                        "right": "10 min",
+                        "state": null,
+                        "flag": "Handed over"
+                  },
+                  {
+                        "id": "kestrel-d",
+                        "lead": "3",
+                        "title": "Kestrel Group",
+                        "person": "Jo Bergström",
+                        "headline": "Two nudges unopened, and a draft is already sitting in your Gmail. Ring first, then send it.",
+                        "right": "8 min",
+                        "state": null,
+                        "flag": "Draft unsent"
+                  }
+            ]
+      },
+      {
+            "label": "Rest of the morning",
+            "sub": "",
+            "count": "3 calls",
+            "meta": "about 24 min",
+            "note": "",
+            "items": [
+                  {
+                        "id": "meridian-d",
+                        "lead": "4",
+                        "title": "Meridian Health",
+                        "person": "Alex Renn",
+                        "headline": "Ticket 4412 has been open nine days with no reply from us. They will raise it on Thursday if you don't.",
+                        "right": "8 min",
+                        "state": null,
+                        "flag": null
+                  },
+                  {
+                        "id": "talia-d",
+                        "lead": "5",
+                        "title": "Talia Foods",
+                        "person": "Jo Bergström",
+                        "headline": "Renewal is six weeks out with no exec sponsor named, and they passed 80% of seats on 1 September.",
+                        "right": "10 min",
+                        "state": null,
+                        "flag": null
+                  },
+                  {
+                        "id": "redwing-d",
+                        "lead": "6",
+                        "title": "Redwing",
+                        "person": "Cara Milne",
+                        "headline": "A 20% offer was written nine days ago and never sent. Decide what you're doing before you ring.",
+                        "right": "6 min",
+                        "state": null,
+                        "flag": "Offer unsent"
+                  }
+            ]
+      },
+      {
+            "label": "If you have time",
+            "sub": "",
+            "count": "2 calls",
+            "meta": "about 11 min",
+            "note": "",
+            "items": [
+                  {
+                        "id": "ardent-d",
+                        "lead": "7",
+                        "title": "Ardent Rail",
+                        "person": "Sam Idowu",
+                        "headline": "Thirty-four days silent from the only contact who has ever engaged. A clear no is worth more than another quarter.",
+                        "right": "6 min",
+                        "state": null,
+                        "flag": "Watcher blind"
+                  },
+                  {
+                        "id": "pike-d",
+                        "lead": "8",
+                        "title": "Pike & Rowe",
+                        "person": "Ben Achebe",
+                        "headline": "Hiring two analytics engineers, which is a warm reason to call rather than a problem to fix.",
+                        "right": "5 min",
+                        "state": null,
+                        "flag": null
+                  }
+            ]
+      },
+      {
+            "label": "Left off on purpose",
+            "sub": "53 accounts",
+            "count": "4 worth saying",
+            "meta": "",
+            "note": "",
+            "items": [
+                  {
+                        "id": null,
+                        "lead": "—",
+                        "title": "Corvus",
+                        "person": "",
+                        "headline": "You speak to Marta on Monday at 15:00. Ringing today duplicates the call.",
+                        "right": "",
+                        "state": null,
+                        "flag": null,
+                        "open": false
+                  },
+                  {
+                        "id": null,
+                        "lead": "—",
+                        "title": "Lowen &amp; Bray",
+                        "person": "",
+                        "headline": "Nina said “not now, try me in the new year” on 19 August. A second approach in three weeks costs more than it gains.",
+                        "right": "",
+                        "state": null,
+                        "flag": null,
+                        "open": false
+                  },
+                  {
+                        "id": null,
+                        "lead": "—",
+                        "title": "Brightsea",
+                        "person": "",
+                        "headline": "They raised last week and a meeting ask is already drafted and waiting on your approval. Send that first.",
+                        "right": "",
+                        "state": null,
+                        "flag": null,
+                        "open": false
+                  },
+                  {
+                        "id": null,
+                        "lead": "—",
+                        "title": "Cobalt Systems",
+                        "person": "",
+                        "headline": "Nothing has changed since you spoke on 1 September.",
+                        "right": "",
+                        "state": null,
+                        "flag": null,
+                        "open": false
+                  }
+            ]
+      }
+],
+  } },
 
   /* ---- GRID — collapses to one table ------------------------------------ */
 

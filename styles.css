@@ -1085,3 +1085,15 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .finding .btn { background: var(--white); border-color: var(--white); }
 .finding .btn.primary { background: var(--white); color: var(--ink); }
 .finding .btn:not(.primary) { background: transparent; border-color: rgba(255,255,255,0.3); color: var(--white); }
+
+/* a row that is information, not a door */
+.wk-call.flat { cursor: default; }
+.wk-call.flat:hover { background: none; }
+.wk-call.flat .wk-acct { font-weight: 400; color: var(--ink-2); }
+
+/* the line to open with */
+.opener {
+  margin: 0; padding: 11px 13px;
+  background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
+  font-size: var(--t-md); line-height: var(--lh-md);
+}
