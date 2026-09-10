@@ -212,15 +212,10 @@ html, body {
   display: block; height: 4px; border-radius: 2px;
   background: var(--flow-3);
 }
-.flow.prose { gap: 11px; }
-.flow.prose i { height: 9px; border-radius: 5px; background: var(--flow-1); }
 .flow.name { gap: 9px; }
 .flow.name i { height: 5px; border-radius: 3px; background: var(--flow-2); }
 .flow.cell i { background: var(--flow-2); }
 
-.overview { padding: 20px 24px 26px; border-bottom: 1px solid var(--rule); }
-.overview h2 { margin: 0 0 16px; font-size: var(--t-lg); font-weight: 500; }
-.overview .line + .line { margin-top: 15px; }
 
 /* ---------------------------------------------------------------- table */
 
