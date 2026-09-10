@@ -376,24 +376,45 @@ CANVAS.renewalPane = (name) => {
     </div>`;
 };
 
+/* One of the 96. Built only from the fields the cohort actually holds —
+   band, position, opened, clicked, what, when — and the band's return rate
+   is read off the same list the report counts, so the two cannot disagree. */
 CANVAS.trialPane = (name) => {
   const a = ACCOUNTS.find((x) => x.name === name);
-  if (!a) return backTo("The report") + "<p class='rn-p'>No record for that account in this run.</p>";
-  const sent = a.position === "wait1" ? 1 : a.position === "wait2" ? 2 : 3;
+  if (!a) return backTo("The report") + `<p class="rn-p">No record for that account in this run.</p>`;
+
+  // step 3 is written, not sent; a reply stops the sequence where it stood
+  const sent =
+    a.position === "wait1" ? 1
+    : a.position === "wait2" || a.position === "step3" ? 2
+    : a.position === "silent" ? 3
+    : /step 1/.test(a.what) ? 1
+    : 2;
+
   const steps = [
     ["1", "Ask what stopped them", sent >= 1, a.opened ? "opened" : "not opened"],
     ["2", "The closest case study", sent >= 2, a.clicked ? "clicked" : a.opened ? "opened, no click" : "not opened"],
-    ["3", "20% for the first year", sent >= 3, a.position === "step3" ? "written, unsent" : sent >= 3 ? "sent" : "never reached"],
+    [
+      "3",
+      "20% for the first year",
+      sent >= 3 || a.position === "step3",
+      a.position === "step3" ? "written, unsent" : sent >= 3 ? "not opened" : "never reached",
+    ],
   ];
+
+  const bandRate = pct(a.band + "-back", a.band);
+  const bandSize = count(a.band);
+  const waiting = ["wait1", "wait2", "step3"].includes(a.position);
+
   return `
     ${backTo("The report")}
     <div class="canvas-head">
       <div>
         <h2>${a.name}</h2>
-        <p class="canvas-meta">${a.bandLabel} · ${a.positionLabel} · ${a.days} days since the trial ended</p>
+        <p class="canvas-meta">${a.bandLabel} · ${a.positionLabel} · last moved ${a.when}</p>
       </div>
       <div class="canvas-actions tight">
-        ${a.position === "step3" ? '<button class="btn primary" type="button">Open the offer in Gmail</button>' : ""}
+        ${a.position === "step3" ? `<button class="btn primary" type="button">Put the offer in my Gmail</button>` : ""}
         <button class="btn" type="button">Open the account</button>
       </div>
     </div>
@@ -402,20 +423,22 @@ CANVAS.trialPane = (name) => {
       <div>
         <h3 class="canvas-h" style="margin-top:0">Why it picked them up</h3>
         <ul class="ev">
-          <li>The trial ended without converting, inside the six-month window the cohort used.</li>
-          <li>${a.bandLabel} — ${a.band === "heavy" ? "the band that comes back 22% of the time" : a.band === "some" ? "the middle band, 7%" : "the band that comes back 2% of the time"}.</li>
-          <li>${a.what}.</li>
+          <li>Their trial ended without converting, inside the window this run swept.</li>
+          <li>${a.bandLabel} — ${bandSize} accounts did that, and ${bandRate} of them came back.</li>
+          <li>Nobody had contacted them since.</li>
         </ul>
       </div>
       <div>
         <h3 class="canvas-h" style="margin-top:0">Where they are now</h3>
-        <p class="rn-p"><strong>${a.positionLabel}</strong> — ${a.state}, as of ${a.when}.</p>
+        <p class="rn-p"><strong>${a.positionLabel}</strong> — ${a.what.charAt(0).toLowerCase() + a.what.slice(1)}, as of ${a.when}.</p>
         ${
           a.position === "step3"
-            ? `<p class="rn-p">A 20% offer is written and sitting unsent. It has been there since ${a.when}.</p>`
-            : a.returned
-            ? `<p class="rn-p">They left the sequence when they replied. No further step ran.</p>`
-            : `<p class="rn-p">The cohort rule changed on 5 September and removed them mid-sequence. Nothing more will be sent.</p>`
+            ? `<p class="rn-p">The offer is written and sitting unsent. It has been there since ${a.when}, and it is one of ${count("step3")} like it.</p>`
+            : a.replied
+            ? `<p class="rn-p">They replied, so the sequence stopped where it stood. Nothing further was sent.</p>`
+            : waiting
+            ? `<p class="rn-p">Still inside the sequence. The next step runs on its own — nothing is waiting on you here.</p>`
+            : `<p class="rn-p">All three steps ran and none landed. They are out of the sequence and will not be written to again.</p>`
         }
       </div>
     </div>
@@ -425,11 +448,14 @@ CANVAS.trialPane = (name) => {
       ${steps
         .map(
           ([n, t, ran, outcome]) => `
-        <li class="${ran ? (n === "3" ? "needs" : "send") : "trigger"}">
+        <li class="${!ran ? "trigger" : n === "3" && a.position === "step3" ? "needs" : "send"}">
           <span class="fs-n">${n}</span>
-          <span class="fs-b"><span class="fs-t">${t}</span><span class="fs-s">${ran ? "sent" : "never reached"}</span></span>
+          <span class="fs-b">
+            <span class="fs-t">${t}</span>
+            <span class="fs-s">${!ran ? "never reached" : n === "3" && a.position === "step3" ? "drafted, not sent" : "sent"}</span>
+          </span>
           <span class="fs-through">${outcome}</span>
-          <span class="fs-tag">${ran ? (n === "3" ? "needs you" : "sent itself") : "—"}</span>
+          <span class="fs-tag">${!ran ? "—" : n === "3" && a.position === "step3" ? "needs you" : "sent itself"}</span>
         </li>`,
         )
         .join("")}
@@ -442,7 +468,7 @@ CANVAS.trialPane = (name) => {
 
 /* An agenda in column 2: the same groups, narrowed. The pack it selects
    is a SUBJECT, so it belongs in the third pane, not a drawer. */
-CANVAS.agendaCol2 = (run) => `
+CANVAS.agendaCol2 = (run, selected) => `
   <div class="a2-figures">
     ${run.agenda.figures.map((f) => `<div><span class="a2-n">${f[0]}</span><span class="a2-l">${f[1]}</span></div>`).join("")}
   </div>
@@ -461,7 +487,7 @@ CANVAS.agendaCol2 = (run) => `
             (c) =>
               c.open === false
                 ? `<div class="a2-item flat"><span class="a2-lead">${c.lead}</span><span class="a2-b"><span class="a2-t">${c.title}</span><span class="a2-s">${c.headline}</span></span></div>`
-                : `<button class="a2-item" type="button" data-item="${c.id}">
+                : `<button class="a2-item${c.id === selected ? " on" : ""}" type="button" data-item="${c.id}">
                      <span class="a2-lead">${c.lead}</span>
                      <span class="a2-b">
                        <span class="a2-t">${c.title}${c.state === "Not opened" ? '<i class="a2-dot"></i>' : ""}</span>
@@ -1838,48 +1864,6 @@ CANVAS.renewals = () => `
   <p class="canvas-after">A judgement I made: someone counts as a live contact only if they have replied in the last 90 days. HubSpot lists 4 more at Halcyon; none has ever answered, so I left them out. Count them and this drops to 3 accounts.</p>`;
 
 /* One account, in the drawer: the behaviour behind the row. */
-CANVAS.renewal = (name) => {
-  const r = RENEWALS.find((x) => x.account === name);
-  return `
-    <header>
-      <div>
-        <h2>${r.account}</h2>
-        <p>${r.valueLabel} · renews ${r.renewsLabel} · notice shuts ${r.noticeLabel}, ${r.daysToNotice} days away · ${r.owner}</p>
-      </div>
-      <button class="icon-btn" type="button" data-close aria-label="Close">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </header>
-    <div class="drawer-body">
-      <h3>What happened to the sponsor</h3>
-      <p class="rn-p">${r.sponsor}</p>
-
-      <h3>Who is left</h3>
-      <p class="rn-p"><strong>${r.replies}</strong>, ${r.repliesRole} — last replied ${r.lastReply}. ${r.engaged} of ${r.known} named contacts have replied to anything in 90 days.</p>
-
-      <h3>How the account is behaving</h3>
-      <div class="table set-table rn-behaviour" style="--set-cols:170px 74px 84px 1fr">
-        <div class="row head"><span>Marker</span><span>Them</span><span>Normal</span><span>What we can see</span></div>
-        ${r.behaviour
-          .map(
-            (b) => `<div class="row item">
-              <span>${b[0]}</span>
-              <span class="rn-figure ${b[3]}">${TREND[b[3]]} ${b[1]}</span>
-              <span class="q">${b[2]}</span>
-              <span>${b[4]}</span>
-            </div>`,
-          )
-          .join("")}
-      </div>
-
-      <h3>Already in flight</h3>
-      <p class="rn-p">${r.inFlight}</p>
-
-      <h3>What this looks like to me</h3>
-      <p class="rn-p verdict-p">${r.verdict}</p>
-    </div>`;
-};
-
 /* A BATCH OF DRAFTS — Trig has written them; a person decides which go.
    Trig does not send: the bulk action puts the chosen ones into the
    owner's Gmail, and sending happens there. Nothing here composes. */

@@ -255,7 +255,7 @@ function stepped(name) {
           : run.agenda
           ? `<div class="col col-subjects agenda">
                <div class="col-head">${run.noun}</div>
-               ${CANVAS.agendaCol2(run)}
+               ${CANVAS.agendaCol2(run, openSubject ? null : openItem)}
              </div>`
           : `<div class="col col-subjects">
                <div class="col-head">${run.noun}</div>
@@ -328,8 +328,6 @@ if (view) view.addEventListener("click", (e) => {
   }
   const item = e.target.closest("[data-item]");
   if (item) { openItem = item.dataset.item; openSubject = null; return stepped(openAssignment); }
-  const row = e.target.closest(".row.item.asg");
-  if (row) stepped(row.dataset.name);
 });
 
 
