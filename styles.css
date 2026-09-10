@@ -1096,3 +1096,45 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
    section head rather than replacing the page, so keep it modest. */
 #asg-view .stepped { min-height: 520px; border-top: 1px solid var(--rule); }
 #asg-view .col-list { padding-top: 4px; }
+
+/* ---------------------------------------------------------- the write log
+   Administrative, so it leads with what failed and what changed, and
+   describes the rest rather than listing it. */
+
+.wl-fail {
+  border: 1px solid #ffd3c7; background: #fff6f4;
+  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px;
+}
+.wl-fail-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.wl-acct { font-size: var(--t-md); font-weight: 500; }
+.wl-obj  { font-size: var(--t-sm); color: var(--ink-2); }
+.wl-when { margin-left: auto; font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.wl-err { margin: 0 0 4px; font-size: var(--t-sm); font-weight: 500; color: #ba4325; }
+.wl-detail { margin: 0 0 8px; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink); }
+.wl-kv { display: grid; grid-template-columns: 148px 1fr; gap: 3px 12px; margin: 0; }
+.wl-kv dt { font-size: var(--t-xs); color: var(--ink-3); }
+.wl-kv dd { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); }
+
+.wl-note { margin: 8px 0 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
+.wl-note.top { margin: 0 0 10px; }
+
+.wl-table .row.item { padding: 8px 12px; font-size: var(--t-sm); }
+.wl-change { font-variant-numeric: tabular-nums; }
+
+.wl-comp { display: flex; flex-direction: column; }
+.wl-comp.tight .wl-row { padding: 4px 0; }
+.wl-row {
+  display: grid; grid-template-columns: 132px 96px 44px 1fr; gap: 14px;
+  align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule);
+}
+.wl-kind { font-size: var(--t-sm); }
+.wl-bar { height: 6px; border-radius: 3px; background: var(--sk-3); overflow: hidden; }
+.wl-bar span { display: block; height: 6px; background: var(--sk-1); border-radius: 3px; }
+.wl-n { font-size: var(--t-sm); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.wl-where { font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
+
+.wl-trust {
+  margin: 18px 0 0; padding: 12px 14px;
+  background: var(--panel2); border: 1px solid var(--edge); border-radius: var(--r-md);
+  font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2);
+}

@@ -1,5 +1,5 @@
 import { ACCOUNTS, SETS, count, pct } from "./cohort.js";
-import { LOGS, BLIND_RUNS } from "./logs.js";
+import { LOGS, BLIND_RUNS, WRITELOG } from "./logs.js";
 import { RENEWALS, TOTAL, INSIDE_90, FALLING, money } from "./renewals.js";
 import { CHAMPIONS, SET, byKind, arm, armBack, rate, KIND_KEYS, KIND, WATCHED } from "./champions.js";
 
@@ -1771,6 +1771,94 @@ CANVAS.drafts = (it) => `
   </div>
 
   <p class="canvas-after">${it.after}</p>`;
+
+/* THE WRITE LOG — what failed, what changed, then the shape of the rest. */
+CANVAS.writes = () => {
+  const W = WRITELOG;
+  const routine = W.composition.reduce((s, c) => s + c[1], 0);
+  const most = Math.max(...W.composition.map((c) => c[1]));
+  return `
+    <header>
+      <div>
+        <h2>${W.written} records written today</h2>
+        <p>Since ${W.since} · ${W.attempted} attempted, ${W.rejected} rejected · only the ${W.rejected} need you</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body">
+
+      <h3>${W.rejected} did not go through</h3>
+      ${W.failures
+        .map(
+          (f) => `
+        <div class="wl-fail">
+          <div class="wl-fail-top">
+            <span class="wl-acct">${f.account}</span>
+            <span class="wl-obj">${f.object}</span>
+            <span class="wl-when">${f.when}</span>
+          </div>
+          <p class="wl-err">${f.error}</p>
+          <p class="wl-detail">${f.detail}</p>
+          <dl class="wl-kv">
+            <dt>Queued, not lost</dt><dd>${f.queued}</dd>
+            <dt>What it costs meanwhile</dt><dd>${f.cost}</dd>
+          </dl>
+        </div>`,
+        )
+        .join("")}
+      <div class="canvas-actions"><button class="btn primary" type="button">Map the field once</button><button class="btn" type="button">Stop writing to Salesforce</button></div>
+      <p class="wl-note">All three are the same field, added on 2 September. Mapping it once releases every queued write on the next run.</p>
+
+      <h3>${W.consequential.length} of the ${W.written} changed something</h3>
+      <p class="wl-note top">These moved a stage, a date, an amount or an owner — the writes that change a number somebody reports on. The other ${routine} recorded what happened without changing anything.</p>
+      <div class="table set-table wl-table" style="--set-cols:56px 130px 84px 180px 1fr">
+        <div class="row head"><span>Time</span><span>Account</span><span>Field</span><span>Change</span><span>Because</span></div>
+        ${W.consequential
+          .map((c) => `<div class="row item">${c.map((x, i) => `<span${i === 3 ? ' class="wl-change"' : ""}>${x}</span>`).join("")}</div>`)
+          .join("")}
+      </div>
+
+      <h3>What the other ${routine} were</h3>
+      <div class="wl-comp">
+        ${W.composition
+          .map(
+            (c) => `
+          <div class="wl-row">
+            <span class="wl-kind">${c[0]}</span>
+            <span class="wl-bar"><span style="width:${Math.round((c[1] / most) * 100)}%"></span></span>
+            <span class="wl-n">${c[1]}</span>
+            <span class="wl-where">${c[3]}</span>
+          </div>`,
+          )
+          .join("")}
+      </div>
+
+      <h3>Where they went</h3>
+      <ul class="promises">
+        ${W.systems.map((x) => `<li class="${x[1] === 20 ? "missed" : "done"}"><span class="pr-s">${x[1]}</span><span>${x[0]} — ${x[2]}</span></li>`).join("")}
+      </ul>
+
+      <h3>Which accounts got the most</h3>
+      <div class="wl-comp tight">
+        ${W.byAccount
+          .map(
+            (a) => `<div class="wl-row">
+              <span class="wl-kind">${a[0]}</span>
+              <span class="wl-bar"><span style="width:${Math.round((a[1] / W.byAccount[0][1]) * 100)}%"></span></span>
+              <span class="wl-n">${a[1]}</span>
+              <span class="wl-where"></span>
+            </div>`,
+          )
+          .join("")}
+      </div>
+      <p class="wl-note">Roughly what you would expect — the five you worked hardest today. A single account taking a third of the writes is usually a loop, not a busy day.</p>
+
+      <p class="wl-trust">${W.trust}</p>
+      <p class="wl-note"><button class="door" type="button" data-log="writes">See the raw feed instead</button> — every record, newest first. Rarely the thing you want.</p>
+    </div>`;
+};
 
 /* A log, in the drawer. Same rule as the report's counts: a number you
    cannot open is a claim. */

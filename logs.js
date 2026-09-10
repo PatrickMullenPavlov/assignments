@@ -111,3 +111,77 @@ export const LOGS = {
     rows: invisible,
   },
 };
+
+/* The write log, designed around the job rather than the data.
+
+   "412 records written today" is not a feed anyone reads. Opening it, a
+   person is asking one of three things:
+
+     did anything I care about change?   → 6 writes moved a stage or a date
+     did anything fail?                  → 3 rejected, and what is queued
+     is it writing the right sort of thing? → the shape of the other 406
+
+   So the drawer leads with what failed, then what was consequential, and
+   only then the composition. The raw feed is one link at the bottom for
+   the rare occasion somebody genuinely wants it.                        */
+
+export const WRITELOG = {
+  written: 412,
+  attempted: 415,
+  rejected: 3,
+  since: "6:41 am",
+
+  /* the only part that needs a person */
+  failures: [
+    {
+      account: "Ferrovia", object: "Opportunity · £96k → £140k", when: "08:14",
+      error: "Forecast Category is required",
+      detail: "Salesforce added the field on 2 September. Trig does not fill it, because nobody has said what it should contain.",
+      queued: "Stage move to Proposal, and a next step dated 16 September.",
+      cost: "The deal still reads as Discovery in every report built since Tuesday.",
+    },
+    {
+      account: "Meridian Health", object: "Opportunity · £88k renewal", when: "11:02",
+      error: "Forecast Category is required",
+      detail: "Same field, same cause.",
+      queued: "Close date moved from 22 May to 8 May.",
+      cost: "The May forecast is £88k in the wrong month.",
+    },
+    {
+      account: "Corvus", object: "Opportunity · £74k → £120k", when: "09:37 Wed",
+      error: "Forecast Category is required",
+      detail: "Third attempt since the field was added. It stopped retrying after two.",
+      queued: "Amount change and a note from the 4 September call.",
+      cost: "The upsell is not in the pipeline number at all.",
+    },
+  ],
+
+  /* writes that moved something a person would want to eyeball */
+  consequential: [
+    ["08:22", "Brightsea", "Stage", "Discovery → Proposal", "you said so on the 9:00 call"],
+    ["09:05", "Talia Foods", "Close date", "14 Jan → 20 Dec", "they asked to bring it forward"],
+    ["10:41", "Corvus", "Amount", "£74k → £120k", "from the expansion proposal"],
+    ["11:38", "Kestrel Group", "Owner", "unassigned → Lazlo", "the previous owner left"],
+    ["14:07", "Pike & Rowe", "Stage", "Proposal → Negotiation", "their reply, 13:58"],
+    ["16:12", "Redwing", "Close date", "11 Nov → 30 Nov", "no reply for nine days"],
+  ],
+
+  /* the shape of the rest — what it is, not a list of it */
+  composition: [
+    ["Emails logged", 168, "HubSpot", "sent and received, threaded to the right deal"],
+    ["Call outcomes", 96, "HubSpot", "duration and outcome, from your calendar and dialler"],
+    ["Meeting records", 54, "HubSpot", "attendees matched to contacts, notes attached"],
+    ["Field updates", 46, "HubSpot", "next steps, notes, last-contacted dates"],
+    ["Contact changes", 42, "HubSpot + Salesforce", "new contacts from signatures, title changes"],
+  ],
+
+  systems: [["HubSpot", 392, "reading and writing normally"], ["Salesforce", 20, "3 rejected — see above"]],
+
+  /* if one account gets a disproportionate share, something is wrong */
+  byAccount: [
+    ["Halcyon", 38], ["Ferrovia", 34], ["Corvus", 31], ["Meridian Health", 29], ["Talia Foods", 24],
+  ],
+
+  trust:
+    "Every record traces to something that happened — a call in your dialler, a message in your mailbox, a meeting in your calendar. It writes nothing it did not observe, and it never edits what a person typed.",
+};
