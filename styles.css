@@ -17,8 +17,7 @@
   --shadow-card: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
   --shadow-nav:  0 2px 1px rgba(140, 145, 150, 0.05);
 
-  /* flow — the three greek weights */
-  --flow-1: #7f8894; /* prose */
+  /* flow — the two greek weights still in use */
   --flow-2: #9aa0aa; /* names */
   --flow-3: #c3c7cd; /* data */
 
