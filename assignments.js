@@ -200,6 +200,12 @@ const view = document.querySelector("#asg-view");
 let openAssignment = null;
 let openItem = null;
 
+/* A SUBJECT opened for depth — an account inside a report, where there is
+   no column 2 to hold a picker. It takes the third pane and offers one way
+   back. Sets and logs stay in the drawer; this is the other half of that
+   rule, not an exception to it. */
+let openSubject = null;
+
 function allItems(run) {
   return (run.groups ?? []).flatMap((g) => g.items);
 }
@@ -219,6 +225,12 @@ function stepped(name) {
   }
   const current =
     single ?? (openItem === "__report" ? run.report : items.find((i) => i.id === openItem));
+
+  const pane = openSubject
+    ? CANVAS[openSubject.kind + "Pane"](openSubject.key)
+    : current
+    ? CANVAS[current.shape](current)
+    : "";
 
   history.replaceState(null, "", "?open=" + encodeURIComponent(name));
 
@@ -240,6 +252,11 @@ function stepped(name) {
       ${
         single
           ? ""
+          : run.agenda
+          ? `<div class="col col-subjects agenda">
+               <div class="col-head">${run.noun}</div>
+               ${CANVAS.agendaCol2(run)}
+             </div>`
           : `<div class="col col-subjects">
                <div class="col-head">${run.noun}</div>
                ${
@@ -269,7 +286,7 @@ function stepped(name) {
              </div>`
       }
 
-      <div class="col col-canvas">${current ? CANVAS[current.shape](current) : ""}</div>
+      <div class="col col-canvas">${pane}</div>
     </div>`;
 }
 
@@ -286,8 +303,10 @@ if (view) view.addEventListener("click", (e) => {
   if (door) return showDrawer(CANVAS.set(door.dataset.set));
   const log = e.target.closest("[data-log]");
   if (log) return showDrawer(log.dataset.log === "WRITES" ? CANVAS.writes() : CANVAS.log(log.dataset.log));
-  const rn = e.target.closest("[data-renewal]");
-  if (rn) return showDrawer(CANVAS.renewal(rn.dataset.renewal));
+  if (e.target.closest("[data-back-pane]")) {
+    openSubject = null;
+    return stepped(openAssignment);
+  }
   const champ = e.target.closest("[data-champ]");
   if (champ) return showDrawer(CANVAS.champs(champ.dataset.champ));
   const pk = e.target.closest("[data-pack]");
@@ -303,11 +322,12 @@ if (view) view.addEventListener("click", (e) => {
     // the open row is the way back — there is nothing else to return to
     if (pick.dataset.pick === openAssignment) return restore();
     openItem = null;
+    openSubject = null;
     hideDrawer();
     return stepped(pick.dataset.pick);
   }
   const item = e.target.closest("[data-item]");
-  if (item) { openItem = item.dataset.item; return stepped(openAssignment); }
+  if (item) { openItem = item.dataset.item; openSubject = null; return stepped(openAssignment); }
   const row = e.target.closest(".row.item.asg");
   if (row) stepped(row.dataset.name);
 });
@@ -345,4 +365,19 @@ if (view) view.addEventListener("click", (e) => {
 if (view) {
   const wanted = new URLSearchParams(location.search).get("open");
   if (wanted && RUNS[wanted]) stepped(wanted);
+}
+
+
+/* Depth can be reached from the pane or from a row inside the drawer, and
+   the drawer lives outside #asg-view — so this listens on the document. */
+if (view) {
+  document.addEventListener("click", (e) => {
+    const deep = e.target.closest("[data-renewal], [data-trial]");
+    if (!deep) return;
+    hideDrawer();
+    openSubject = deep.dataset.renewal
+      ? { kind: "renewal", key: deep.dataset.renewal }
+      : { kind: "trial", key: deep.dataset.trial };
+    stepped(openAssignment);
+  });
 }

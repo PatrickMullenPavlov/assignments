@@ -320,9 +320,160 @@ CANVAS.champs = (kind) => {
     </div>`;
 };
 
+/* ---------------------------------------------------------------- depth
+   A subject, in the third pane. One way back, because there is no column 2
+   here to hold your place. */
+
+const backTo = (label) =>
+  `<button class="back-pane" type="button" data-back-pane>
+     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+     ${label}
+   </button>`;
+
+CANVAS.renewalPane = (name) => {
+  const r = RENEWALS.find((x) => x.account === name);
+  return `
+    ${backTo("All seven accounts")}
+    <div class="canvas-head">
+      <div>
+        <h2>${r.account}</h2>
+        <p class="canvas-meta">${r.valueLabel} · renews ${r.renewsLabel} · notice shuts ${r.noticeLabel}, ${r.daysToNotice} days away · ${r.owner}</p>
+      </div>
+      <div class="canvas-actions tight">
+        <button class="btn primary" type="button">Open the account</button>
+        <button class="btn" type="button">Add to Thursday's call</button>
+      </div>
+    </div>
+
+    <div class="canvas-cols" style="margin-top:16px">
+      <div>
+        <h3 class="canvas-h" style="margin-top:0">What happened to the sponsor</h3>
+        <p class="rn-p">${r.sponsor}</p>
+        <h3 class="canvas-h">Who is left</h3>
+        <p class="rn-p"><strong>${r.replies}</strong>, ${r.repliesRole} — last replied ${r.lastReply}. ${r.engaged} of ${r.known} named contacts have replied to anything in 90 days.</p>
+      </div>
+      <div>
+        <h3 class="canvas-h" style="margin-top:0">Already in flight</h3>
+        <p class="rn-p">${r.inFlight}</p>
+        <h3 class="canvas-h">What this looks like to me</h3>
+        <p class="rn-p verdict-p">${r.verdict}</p>
+      </div>
+    </div>
+
+    <h3 class="canvas-h">How the account is behaving</h3>
+    <div class="table set-table rn-behaviour" style="--set-cols:190px 84px 96px 1fr">
+      <div class="row head"><span>Marker</span><span>Them</span><span>Normal</span><span>What we can see</span></div>
+      ${r.behaviour
+        .map(
+          (b) => `<div class="row item">
+            <span>${b[0]}</span>
+            <span class="rn-figure ${b[3]}">${TREND[b[3]]} ${b[1]}</span>
+            <span class="q">${b[2]}</span>
+            <span>${b[4]}</span>
+          </div>`,
+        )
+        .join("")}
+    </div>`;
+};
+
+CANVAS.trialPane = (name) => {
+  const a = ACCOUNTS.find((x) => x.name === name);
+  if (!a) return backTo("The report") + "<p class='rn-p'>No record for that account in this run.</p>";
+  const sent = a.position === "wait1" ? 1 : a.position === "wait2" ? 2 : 3;
+  const steps = [
+    ["1", "Ask what stopped them", sent >= 1, a.opened ? "opened" : "not opened"],
+    ["2", "The closest case study", sent >= 2, a.clicked ? "clicked" : a.opened ? "opened, no click" : "not opened"],
+    ["3", "20% for the first year", sent >= 3, a.position === "step3" ? "written, unsent" : sent >= 3 ? "sent" : "never reached"],
+  ];
+  return `
+    ${backTo("The report")}
+    <div class="canvas-head">
+      <div>
+        <h2>${a.name}</h2>
+        <p class="canvas-meta">${a.bandLabel} · ${a.positionLabel} · ${a.days} days since the trial ended</p>
+      </div>
+      <div class="canvas-actions tight">
+        ${a.position === "step3" ? '<button class="btn primary" type="button">Open the offer in Gmail</button>' : ""}
+        <button class="btn" type="button">Open the account</button>
+      </div>
+    </div>
+
+    <div class="canvas-cols" style="margin-top:16px">
+      <div>
+        <h3 class="canvas-h" style="margin-top:0">Why it picked them up</h3>
+        <ul class="ev">
+          <li>The trial ended without converting, inside the six-month window the cohort used.</li>
+          <li>${a.bandLabel} — ${a.band === "heavy" ? "the band that comes back 22% of the time" : a.band === "some" ? "the middle band, 7%" : "the band that comes back 2% of the time"}.</li>
+          <li>${a.what}.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="canvas-h" style="margin-top:0">Where they are now</h3>
+        <p class="rn-p"><strong>${a.positionLabel}</strong> — ${a.state}, as of ${a.when}.</p>
+        ${
+          a.position === "step3"
+            ? `<p class="rn-p">A 20% offer is written and sitting unsent. It has been there since ${a.when}.</p>`
+            : a.returned
+            ? `<p class="rn-p">They left the sequence when they replied. No further step ran.</p>`
+            : `<p class="rn-p">The cohort rule changed on 5 September and removed them mid-sequence. Nothing more will be sent.</p>`
+        }
+      </div>
+    </div>
+
+    <h3 class="canvas-h">What it did here</h3>
+    <ol class="flowsteps">
+      ${steps
+        .map(
+          ([n, t, ran, outcome]) => `
+        <li class="${ran ? (n === "3" ? "needs" : "send") : "trigger"}">
+          <span class="fs-n">${n}</span>
+          <span class="fs-b"><span class="fs-t">${t}</span><span class="fs-s">${ran ? "sent" : "never reached"}</span></span>
+          <span class="fs-through">${outcome}</span>
+          <span class="fs-tag">${ran ? (n === "3" ? "needs you" : "sent itself") : "—"}</span>
+        </li>`,
+        )
+        .join("")}
+    </ol>`;
+};
+
 /* THE WEEK — a calendar of recurring customer calls. Days expand and
    collapse; a call opens its pack in the drawer. The pack itself is
    unchanged, it has just stopped being the top level. */
+
+/* An agenda in column 2: the same groups, narrowed. The pack it selects
+   is a SUBJECT, so it belongs in the third pane, not a drawer. */
+CANVAS.agendaCol2 = (run) => `
+  <div class="a2-figures">
+    ${run.agenda.figures.map((f) => `<div><span class="a2-n">${f[0]}</span><span class="a2-l">${f[1]}</span></div>`).join("")}
+  </div>
+  ${run.groups
+    .map(
+      (g) => `
+    <section class="a2-group" data-open>
+      <button class="a2-head" type="button" data-day-toggle>
+        <svg class="wk-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span class="a2-d">${g.label}</span>
+        <span class="a2-c">${g.count}</span>
+      </button>
+      <div class="a2-items">
+        ${g.items
+          .map(
+            (c) =>
+              c.open === false
+                ? `<div class="a2-item flat"><span class="a2-lead">${c.lead}</span><span class="a2-b"><span class="a2-t">${c.title}</span><span class="a2-s">${c.headline}</span></span></div>`
+                : `<button class="a2-item" type="button" data-item="${c.id}">
+                     <span class="a2-lead">${c.lead}</span>
+                     <span class="a2-b">
+                       <span class="a2-t">${c.title}${c.state === "Not opened" ? '<i class="a2-dot"></i>' : ""}</span>
+                       <span class="a2-s">${c.person || c.headline}</span>
+                     </span>
+                   </button>`,
+          )
+          .join("")}
+      </div>
+    </section>`,
+    )
+    .join("")}`;
 
 CANVAS.agenda = (it) => `
   <div class="canvas-head">
@@ -712,7 +863,7 @@ CANVAS.set = (key) => {
       <ul class="acct-list">
         ${rows
           .map(
-            (a) => `<li>
+            (a) => `<li class="deep" data-trial="${a.name}" role="button" tabindex="0">
               <span class="al-name">${a.name}</span>
               <span class="al-where">${a.positionLabel}</span>
               <span class="al-sub">${a.bandLabel} · ${a.what} · ${a.when}</span>
@@ -1910,12 +2061,8 @@ export const RUNS = {
 
   /* ---- SEQUENCE — collapses to one stack -------------------------------- */
 
-  "Prep my 1:1s": { layout: "sequence", run: "Today, 6:40 am · 1m 42s · closed", single: {
-    shape: "agenda",
-    name: "Your week",
-    meta: "Eleven recurring customer calls, 14 to 18 September. Each pack is built at 6:40 am from what moved, what you promised, and what they asked for.",
-    figures: [["11", "calls this week"], ["£802k", "of book in the room"], ["5", "packs you haven't opened"]],
-    say: "Ordered by the diary, not by importance — the packs do the prioritising inside each day. Open a call to read its pack.",
+  "Prep my 1:1s": { layout: "sequence", run: "Today, 6:40 am · 1m 42s · closed", noun: "Your week",
+    agenda: { name: "Your week", meta: "Eleven recurring customer calls, 14 to 18 September. Each pack is built at 6:40 am from what moved, what you promised, and what they asked for.", say: "Ordered by the diary, not by importance — the packs do the prioritising inside each day. Open a call to read its pack.", figures: [["11", "calls this week"], ["£802k", "of book in the room"], ["5", "packs you haven't opened"]] },
     groups: [
       {
             "label": "Monday",
@@ -1932,7 +2079,8 @@ export const RUNS = {
                         "headline": "Reporting stopped 43 days ago, both ops admins gone, renewal in 10 weeks",
                         "right": "£142k",
                         "state": "Not opened",
-                        "flag": "Draft unsent"
+                        "flag": "Draft unsent",
+                        "shape": "pack"
                   },
                   {
                         "id": "brightsea",
@@ -1942,7 +2090,8 @@ export const RUNS = {
                         "headline": "Raised a Series B on 2 September — the ops team is about to double",
                         "right": "£58k",
                         "state": "Read",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   },
                   {
                         "id": "corvus",
@@ -1952,7 +2101,8 @@ export const RUNS = {
                         "headline": "One seat from a hard stop, and finance started using it unsold",
                         "right": "£74k",
                         "state": "Read",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   }
             ]
       },
@@ -1971,7 +2121,8 @@ export const RUNS = {
                         "headline": "Going well and nobody has told her — she's three weeks into the role",
                         "right": "£88k",
                         "state": "Read",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   },
                   {
                         "id": "trellis",
@@ -1981,7 +2132,8 @@ export const RUNS = {
                         "headline": "Clicked the case study on 27 August and has said nothing since",
                         "right": "£33k",
                         "state": "Read",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   }
             ]
       },
@@ -2000,7 +2152,8 @@ export const RUNS = {
                         "headline": "A proposal has been finished and unsent for six days",
                         "right": "£88k",
                         "state": "Read",
-                        "flag": "Proposal unsent"
+                        "flag": "Proposal unsent",
+                        "shape": "pack"
                   },
                   {
                         "id": "northwind",
@@ -2010,7 +2163,8 @@ export const RUNS = {
                         "headline": "Hiring three ops analysts — the biggest account with no plan against it",
                         "right": "£112k",
                         "state": "Not opened",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   },
                   {
                         "id": "redwing",
@@ -2020,7 +2174,8 @@ export const RUNS = {
                         "headline": "A 20% offer has been sitting unsent in your Gmail for nine days",
                         "right": "£46k",
                         "state": "Not opened",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   }
             ]
       },
@@ -2039,7 +2194,8 @@ export const RUNS = {
                         "headline": "Passed 80% of seats, and six weeks out with no sponsor",
                         "right": "£61k",
                         "state": "Read",
-                        "flag": null
+                        "flag": null,
+                        "shape": "pack"
                   },
                   {
                         "id": "kestrel",
@@ -2049,7 +2205,8 @@ export const RUNS = {
                         "headline": "No admin at all since 12 August, and a draft is waiting in your Gmail",
                         "right": "£61k",
                         "state": "Not opened",
-                        "flag": "Draft unsent"
+                        "flag": "Draft unsent",
+                        "shape": "pack"
                   }
             ]
       },
@@ -2068,19 +2225,17 @@ export const RUNS = {
                         "headline": "34 days silent from the only contact who has ever engaged",
                         "right": "£39k",
                         "state": "Not opened",
-                        "flag": "Watcher blind"
+                        "flag": "Watcher blind",
+                        "shape": "pack"
                   }
             ]
       }
 ],
-  } },
+  },
 
-  "Rank today's list before dialling": { layout: "sequence", run: "Today, 6:40 am · gone at 6 pm", single: {
-    shape: "agenda",
-    name: "Today's list, ranked",
-    meta: "Looked at all 61 accounts at 6:40 am. Eight are worth the morning. Gone at 6 pm — a fresh one is built tomorrow.",
-    figures: [["8", "worth ringing today"], ["65 min", "for all of them"], ["53", "have nothing new"]],
-    say: "Ranked by what today changes, not by value. The last group is what it deliberately left off, and why.",
+
+  "Rank today's list before dialling": { layout: "sequence", run: "Today, 6:40 am · gone at 6 pm", noun: "Today's list, ranked",
+    agenda: { name: "Today's list, ranked", meta: "Looked at all 61 accounts at 6:40 am. Eight are worth the morning. Gone at 6 pm — a fresh one is built tomorrow.", say: "Ranked by what today changes, not by value. The last group is what it deliberately left off, and why.", figures: [["8", "worth ringing today"], ["65 min", "for all of them"], ["53", "have nothing new"]] },
     groups: [
       {
             "label": "Ring these first",
@@ -2097,7 +2252,8 @@ export const RUNS = {
                         "headline": "Both ops admins gone 43 days and the renewal is 10 weeks out. Highest value at risk on the book.",
                         "right": "12 min",
                         "state": null,
-                        "flag": null
+                        "flag": null,
+                        "shape": "dial"
                   },
                   {
                         "id": "ferrovia-d",
@@ -2107,7 +2263,8 @@ export const RUNS = {
                         "headline": "Eight days from go-live and it hasn't moved since 21 August. Three emails, no reply to any.",
                         "right": "10 min",
                         "state": null,
-                        "flag": "Handed over"
+                        "flag": "Handed over",
+                        "shape": "dial"
                   },
                   {
                         "id": "kestrel-d",
@@ -2117,7 +2274,8 @@ export const RUNS = {
                         "headline": "Two nudges unopened, and a draft is already sitting in your Gmail. Ring first, then send it.",
                         "right": "8 min",
                         "state": null,
-                        "flag": "Draft unsent"
+                        "flag": "Draft unsent",
+                        "shape": "dial"
                   }
             ]
       },
@@ -2136,7 +2294,8 @@ export const RUNS = {
                         "headline": "Ticket 4412 has been open nine days with no reply from us. They will raise it on Thursday if you don't.",
                         "right": "8 min",
                         "state": null,
-                        "flag": null
+                        "flag": null,
+                        "shape": "dial"
                   },
                   {
                         "id": "talia-d",
@@ -2146,7 +2305,8 @@ export const RUNS = {
                         "headline": "Renewal is six weeks out with no exec sponsor named, and they passed 80% of seats on 1 September.",
                         "right": "10 min",
                         "state": null,
-                        "flag": null
+                        "flag": null,
+                        "shape": "dial"
                   },
                   {
                         "id": "redwing-d",
@@ -2156,7 +2316,8 @@ export const RUNS = {
                         "headline": "A 20% offer was written nine days ago and never sent. Decide what you're doing before you ring.",
                         "right": "6 min",
                         "state": null,
-                        "flag": "Offer unsent"
+                        "flag": "Offer unsent",
+                        "shape": "dial"
                   }
             ]
       },
@@ -2175,7 +2336,8 @@ export const RUNS = {
                         "headline": "Thirty-four days silent from the only contact who has ever engaged. A clear no is worth more than another quarter.",
                         "right": "6 min",
                         "state": null,
-                        "flag": "Watcher blind"
+                        "flag": "Watcher blind",
+                        "shape": "dial"
                   },
                   {
                         "id": "pike-d",
@@ -2185,7 +2347,8 @@ export const RUNS = {
                         "headline": "Hiring two analytics engineers, which is a warm reason to call rather than a problem to fix.",
                         "right": "5 min",
                         "state": null,
-                        "flag": null
+                        "flag": null,
+                        "shape": "dial"
                   }
             ]
       },
@@ -2243,7 +2406,8 @@ export const RUNS = {
             ]
       }
 ],
-  } },
+  },
+
 
   /* ---- GRID — collapses to one table ------------------------------------ */
 
