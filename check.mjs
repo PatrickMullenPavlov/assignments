@@ -47,3 +47,31 @@ let panes = 0;
 for (const a of ACCOUNTS) { if (CANVAS.trialPane(a.name).includes("undefined")) mismatch.push(a.name); panes++; }
 for (const r of RENEWALS) { if (CANVAS.renewalPane(r.account).includes("undefined")) mismatch.push(r.account); panes++; }
 console.log(mismatch.length ? "PANES WITH HOLES: " + mismatch.join(", ") : `ok: ${panes} depth panes, no holes`);
+
+/* Every data-* hook a row is given must be one a handler listens for.
+   Rendering proves nothing about this: a row can carry data-name forever
+   while every handler reads data-pick, and it just quietly stops opening. */
+import { readFileSync, readdirSync } from "node:fs";
+const DIR = "/Users/patrick/Desktop/trig-prototype/";
+const src = readdirSync(DIR)
+  .filter((f) => f.endsWith(".js") && f !== "serve.py")
+  .map((f) => readFileSync(DIR + f, "utf8"))
+  .join("\n");
+
+const kebab = (s) => s.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+const written = new Set([
+  ...[...src.matchAll(/\sdata-([a-z0-9-]+)=/g)].map((m) => m[1]),
+  ...[...src.matchAll(/\.dataset\.([A-Za-z0-9]+)\s*=[^=]/g)].map((m) => kebab(m[1])),
+]);
+// a hook is read if a handler queries it OR the stylesheet selects on it
+const css = readFileSync(DIR + "styles.css", "utf8");
+const read = new Set([
+  ...[...src.matchAll(/\[data-([a-z0-9-]+)[\]=]/g)].map((m) => m[1]),
+  ...[...src.matchAll(/\.dataset\.([A-Za-z0-9]+)(?!\s*=[^=])/g)].map((m) => kebab(m[1])),
+  ...[...src.matchAll(/toggleAttribute\("data-([a-z0-9-]+)"/g)].map((m) => m[1]),
+  ...[...css.matchAll(/\[data-([a-z0-9-]+)[\]=]/g)].map((m) => m[1]),
+]);
+const orphans = [...written].filter((a) => !read.has(a)).sort();
+console.log(orphans.length
+  ? "HOOKS NOTHING LISTENS FOR: " + orphans.map((a) => "data-" + a).join(", ")
+  : `ok: all ${written.size} data hooks are read by a handler`);

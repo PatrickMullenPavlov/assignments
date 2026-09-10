@@ -124,7 +124,7 @@ document.querySelector("#reports-grid").replaceChildren(
     const el = document.createElement("article");
     el.className = "report";
     el.innerHTML = `
-      <div class="thumb" data-shape="${r.shape}" aria-hidden="true">
+      <div class="thumb" aria-hidden="true">
         <div class="thumb-inner">${SHAPES[r.shape]()}</div>
         <div class="thumb-fade"></div>
       </div>

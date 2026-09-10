@@ -39,7 +39,6 @@ export function onFilterChange(fn) {
 function set(rep) {
   if (rep === current) return;
   current = rep;
-  document.body.dataset.rep = rep;
   listeners.forEach((fn) => fn(current));
 }
 
@@ -53,4 +52,3 @@ tabs.forEach((tab) => {
   });
 });
 
-document.body.dataset.rep = current;

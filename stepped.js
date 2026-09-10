@@ -1856,7 +1856,7 @@ CANVAS.renewals = () => `
         <span class="rn-contacts">${r.engaged} of ${r.known}<em>reply to anything</em></span>
         <span class="rn-usage ${r.usage}">${TREND[r.usage]} ${r.usage}<em>${r.usageNote}</em></span>
         <span class="rn-why">${r.sponsor}</span>
-        <span class="rn-go"><button class="btn sm" type="button" data-renewal-open="${r.account}">Look</button></span>
+        <span class="rn-go"><button class="btn sm" type="button" tabindex="-1">Look</button></span>
       </div>`,
     ).join("")}
   </div>
@@ -1890,7 +1890,7 @@ CANVAS.drafts = (it) => `
     ${it.rows
       .map(
         (r, i) => `
-      <div class="row item draft${r.flag ? " flagged" : ""}" data-draft="${i}">
+      <div class="row item draft${r.flag ? " flagged" : ""}">
         <label class="cb"><input type="checkbox" data-row${r.flag ? "" : " checked"}><span></span></label>
         <span class="d-deal">${r.deal}</span>
         <span class="d-fired">${r.fired}</span>

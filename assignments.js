@@ -166,7 +166,8 @@ function paint(rep) {
       const row = document.createElement("div");
       row.className = "row item asg";
       row.dataset.state = a.state;
-      row.dataset.name = a.name;
+      // same attribute the narrow list uses — one row, one way to pick it
+      row.dataset.pick = a.name;
       row.tabIndex = 0;
       row.setAttribute("role", "button");
       row.innerHTML = rowHTML(a);
