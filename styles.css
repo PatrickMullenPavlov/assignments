@@ -551,10 +551,24 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .col { min-width: 0; }
 /* 24px matches .table, so a row sits at the same x whether the table is
    full width or is column 1. Without it the list shifts 10px on select. */
-.col-list { width: 344px; flex: none; border-right: 1px solid var(--rule); padding: 0 24px 14px; }
-.col-subjects { width: 308px; flex: none; border-right: 1px solid var(--rule); padding: 0 8px 8px; }
-.col-canvas { flex: 1 1 0; padding: 16px 32px 32px; min-width: 0; }
+/* Proportional, not fixed: a quarter each for the list and its subjects,
+   half for the work. Below lg they even out to thirds, because at that
+   width a 50% canvas is narrower than the two columns feeding it.
+   lg is 1024px — Tailwind v4's default, which the app does not override. */
+.col-list { flex: 0 0 25%; border-right: 1px solid var(--rule); padding: 0 24px 14px; }
+.col-subjects { flex: 0 0 25%; border-right: 1px solid var(--rule); padding: 0 8px 8px; }
+/* grows, so when a run makes one thing and column 2 steps out of the
+   way, the canvas takes the quarter it left behind rather than a gap */
+.col-canvas { flex: 1 1 50%; padding: 16px 32px 32px; min-width: 0; }
 .stepped.collapsed .col-canvas { padding-left: 32px; }
+
+@media (max-width: 1023.98px) {
+  .col-list, .col-subjects { flex-basis: 33.3333%; }
+  .col-canvas { flex-basis: 33.3333%; }
+  /* a third of 1024 leaves the canvas ~277px of content: the layouts that
+     split it in two have to stop splitting, or each half is 124px */
+  .canvas-cols, .seq-cols, .doc-split { grid-template-columns: 1fr; }
+}
 
 
 
