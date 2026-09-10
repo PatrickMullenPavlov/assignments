@@ -273,7 +273,13 @@ html, body {
 
 /* ---------------------------------------------------------- needs action */
 
-.table.needs .row { grid-template-columns: 186px 1fr 176px 128px 66px 132px; gap: 18px; }
+/* 25 / 25 / then the four data points share the last half evenly.
+   2+2+1+1+1+1 = 8 tracks of free space, so the first two are 2/8 each and
+   the rest 1/8. minmax(0,…) so a long cell narrows instead of overflowing. */
+.table.needs .row {
+  grid-template-columns: repeat(2, minmax(0, 2fr)) repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
 .table .row.need { cursor: pointer; border-radius: 6px; }
 .table .row.need:hover { background: var(--panel2); }
 .table .row.need:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
