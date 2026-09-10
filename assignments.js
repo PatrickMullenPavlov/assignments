@@ -118,7 +118,7 @@ const ASSIGNMENTS = [
 ];
 
 import { onFilterChange } from "./filter.js";
-import { RUNS, CANVAS } from "./stepped.js";
+import { RUNS, CANVAS, resolve } from "./stepped.js";
 import { SETS } from "./cohort.js";
 import { showDrawer, hideDrawer } from "./drawer.js";
 
@@ -207,25 +207,16 @@ let openItem = null;
    rule, not an exception to it. */
 let openSubject = null;
 
-function allItems(run) {
-  return (run.groups ?? []).flatMap((g) => g.items);
-}
-
 function stepped(name) {
   const run = RUNS[name];
   if (!run || !view) return;
   openAssignment = name;
 
-  const single = run.single ?? null;
-  const items = single ? [] : allItems(run);
   // "the report" is a subject-list row like any other, and it is the default.
   // Picking an account narrows to that account; picking it again comes back.
-  const hasReport = Boolean(run.report);
-  if (!single && openItem !== "__report" && !items.some((i) => i.id === openItem)) {
-    openItem = hasReport ? "__report" : (items[0]?.id ?? null);
-  }
-  const current =
-    single ?? (openItem === "__report" ? run.report : items.find((i) => i.id === openItem));
+  const r = resolve(run, openItem);
+  const { single, hasReport, current } = r;
+  openItem = r.openItem;
 
   const pane = openSubject
     ? CANVAS[openSubject.kind + "Pane"](openSubject.key)

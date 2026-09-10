@@ -1,4 +1,4 @@
-import { CANVAS, RUNS } from "/Users/patrick/Desktop/trig-prototype/stepped.js";
+import { CANVAS, RUNS, resolve } from "/Users/patrick/Desktop/trig-prototype/stepped.js";
 import { SETS, ACCOUNTS } from "/Users/patrick/Desktop/trig-prototype/cohort.js";
 import { LOGS } from "/Users/patrick/Desktop/trig-prototype/logs.js";
 import { RENEWALS } from "/Users/patrick/Desktop/trig-prototype/renewals.js";
@@ -19,6 +19,24 @@ for (const [n, r] of Object.entries(RUNS)) {
 }
 console.log(bad.length ? "FAILS:\n  " + bad.join("\n  ")
   : `ok: ${Object.keys(RUNS).length} runs, ${agendas} column-2 agendas, ${items} items all render`);
+
+/* The question a user actually asks: I clicked this assignment — did
+   anything appear? Run the app's own resolve(), not a copy of it, from
+   a cold open and from whatever was open before. */
+const empty = [];
+for (const [n, r] of Object.entries(RUNS)) {
+  const priors = [null, "__report", "halcyon", "no-such-item"];
+  for (const prior of priors) {
+    let html;
+    try {
+      const { current } = resolve(r, prior);
+      html = current ? CANVAS[current.shape](current) : "";
+    } catch (e) { html = "THREW: " + e.message; }
+    if (!html || html.startsWith("THREW")) empty.push(`${n} (was ${prior}) → ${html || "empty pane"}`);
+  }
+}
+console.log(empty.length ? "OPENS TO NOTHING:\n  " + empty.join("\n  ")
+  : `ok: every assignment opens to a pane, from every prior selection`);
 
 const html = Object.values(RUNS).map((r) =>
   [r.single && CANVAS[r.single.shape](r.single), r.report && CANVAS[r.report.shape](r.report)]
@@ -95,3 +113,19 @@ const orphans = [...written].filter((a) => !read.has(a)).sort();
 console.log(orphans.length
   ? "HOOKS NOTHING LISTENS FOR: " + orphans.map((a) => "data-" + a).join(", ")
   : `ok: all ${written.size} data hooks are read by a handler`);
+
+/* Same failure, one level up: a class in the markup that the stylesheet
+   never mentions renders as an unstyled div and nothing complains.
+   .col-head sat in both column-2 branches for weeks with no rule at all. */
+const pages = readdirSync(DIR).filter((f) => f.endsWith(".html"))
+  .map((f) => readFileSync(DIR + f, "utf8")).join("\n");
+const used = new Set(
+  [...(src + pages).matchAll(/class="([^"$]*)"/g)]
+    .flatMap((m) => m[1].split(/\s+/))
+    .filter((c) => c && !/[^a-z0-9-]/.test(c)),
+);
+const styled = new Set([...css.matchAll(/\.([a-z][a-z0-9-]*)/g)].map((m) => m[1]));
+const unstyled = [...used].filter((c) => !styled.has(c)).sort();
+console.log(unstyled.length
+  ? "CLASSES WITH NO RULE: " + unstyled.map((c) => "." + c).join(", ")
+  : `ok: all ${used.size} classes in the markup have a rule`);

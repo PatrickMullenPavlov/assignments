@@ -2558,4 +2558,28 @@ export const RUNS = {
 
 };
 
+/* What the three panes show, given a run and what is picked.
+
+   This lives here, and is exported, because the check needs to exercise
+   the SAME resolution the app runs. A copy of it in a test is a copy that
+   drifts, and it drifted: the check called canvases directly and passed
+   while clicking an assignment showed an empty pane.
+
+   Only items with an id can be picked. Some groups are deliberately not
+   openable — "Left off on purpose" in the dialling list carries id: null —
+   and they must not be mistaken for a selection. */
+export function resolve(run, openItem) {
+  const single = run.single || null;
+  const openable = single ? [] : (run.groups ?? []).flatMap((g) => g.items).filter((i) => i.id);
+  const hasReport = Boolean(run.report);
+
+  // A selection only survives if THIS run can show it. Carrying "__report"
+  // into a run that has no report leaves the pane empty.
+  let item = openItem;
+  const valid = single || (item === "__report" ? hasReport : openable.some((i) => i.id === item));
+  if (!valid) item = hasReport ? "__report" : openable[0]?.id ?? null;
+  const current = single || (item === "__report" ? run.report : openable.find((i) => i.id === item));
+  return { single, openable, hasReport, openItem: item, current };
+}
+
 export { CANVAS };

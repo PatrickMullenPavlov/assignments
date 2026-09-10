@@ -226,7 +226,8 @@ html, body {
 }
 .table.has-status .row { grid-template-columns: 1fr 300px 300px 300px 300px 190px; }
 
-.table .row.head {
+.table .row.head,
+.col-head {
   background: var(--panel2);
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
@@ -236,6 +237,9 @@ html, body {
   text-transform: uppercase;
   color: var(--ink-3);
 }
+/* Same component as the table head, inset to sit over its own column: 12px
+   so the label's text lines up with the 8 + 12 of the rows beneath it. */
+.col-head { padding: 10px 12px; margin-bottom: 4px; }
 .table .row.item { padding: 15px 18px; border-bottom: 1px solid var(--rule); }
 .table .row.item:last-child { border-bottom: 0; }
 
@@ -548,16 +552,16 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 /* 24px matches .table, so a row sits at the same x whether the table is
    full width or is column 1. Without it the list shifts 10px on select. */
 .col-list { width: 344px; flex: none; border-right: 1px solid var(--rule); padding: 0 24px 14px; }
-.col-subjects { width: 308px; flex: none; border-right: 1px solid var(--rule); padding: 0 16px 12px; }
-.col-canvas { flex: 1 1 0; padding: 4px 26px 24px; min-width: 0; }
-.stepped.collapsed .col-canvas { padding-left: 26px; }
+.col-subjects { width: 308px; flex: none; border-right: 1px solid var(--rule); padding: 0 8px 8px; }
+.col-canvas { flex: 1 1 0; padding: 16px 32px 32px; min-width: 0; }
+.stepped.collapsed .col-canvas { padding-left: 32px; }
 
 
 
 .subj {
   display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
   border: 0; background: none; font: inherit; cursor: pointer;
-  padding: 9px 10px; border-radius: 6px; color: var(--ink);
+  padding: 8px 12px; border-radius: 6px; color: var(--ink);
 }
 .subj:hover { background: var(--panel2); }
 .subj.on { background: var(--white); box-shadow: var(--shadow-nav); }
@@ -576,7 +580,7 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   padding: 4px 11px; font-size: var(--t-xs); color: var(--ink-2);
 }
 .grp {
-  padding: 12px 10px 5px; font-size: var(--t-label); letter-spacing: 0.06em;
+  padding: 12px 12px 5px; font-size: var(--t-label); letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--ink-3);
 }
 .grp.warn { color: #ba4325; }
@@ -995,6 +999,8 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .verdict-p { background: var(--panel2); border: 1px solid var(--edge); border-radius: var(--r-md); padding: 12px 14px; }
 .rn-behaviour .row { align-items: baseline; }
 .rn-behaviour .row.item { padding: 8px 12px; font-size: var(--t-sm); line-height: var(--lh-sm); }
+.row.item.rn { cursor: pointer; }
+.row.item.rn:hover { background: var(--panel2); }
 .rn-figure { font-variant-numeric: tabular-nums; }
 .rn-figure.falling { color: #ba4325; }
 .rn-figure.rising { color: #077764; }
@@ -1140,14 +1146,14 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 
 /* --------------------------------------------------- agenda in column 2 */
 .col-subjects.agenda { padding-top: 0; }
-.a2-figures { display: flex; flex-direction: column; gap: 2px; padding: 4px 10px 12px; border-bottom: 1px solid var(--rule); margin-bottom: 6px; }
+.a2-figures { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px 12px; border-bottom: 1px solid var(--rule); margin-bottom: 6px; }
 .a2-figures div { display: flex; align-items: baseline; gap: 8px; }
 .a2-n { font-size: var(--t-md); font-weight: 500; font-variant-numeric: tabular-nums; }
 .a2-l { font-size: var(--t-xs); color: var(--ink-3); }
 
 .a2-head {
   display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
-  border: 0; background: none; font: inherit; cursor: pointer; padding: 7px 10px; border-radius: 6px;
+  border: 0; background: none; font: inherit; cursor: pointer; padding: 8px 12px; border-radius: 6px;
 }
 .a2-head:hover { background: var(--panel2); }
 .a2-group[data-open] .wk-caret { transform: rotate(90deg); }
@@ -1158,7 +1164,7 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 
 .a2-item {
   display: grid; grid-template-columns: 44px 1fr; gap: 10px; width: 100%; text-align: left;
-  border: 0; background: none; font: inherit; cursor: pointer; padding: 7px 10px; border-radius: 6px;
+  border: 0; background: none; font: inherit; cursor: pointer; padding: 8px 12px; border-radius: 6px;
 }
 .a2-item:hover { background: var(--panel2); }
 .a2-item.on { background: var(--white); box-shadow: var(--shadow-nav); }
