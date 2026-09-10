@@ -501,134 +501,91 @@ CANVAS.agendaCol2 = (run, selected) => `
     )
     .join("")}`;
 
-CANVAS.agenda = (it) => `
-  <div class="canvas-head">
-    <div>
-      <h2>${it.name}</h2>
-      <p class="canvas-meta">${it.meta}</p>
-    </div>
-  </div>
-
-  <div class="wk-summary">
-    ${it.figures.map((f) => `<div><span class="rn-n">${f[0]}</span><span class="rn-l">${f[1]}</span></div>`).join("")}
-    <p class="rn-say">${it.say}</p>
-  </div>
-
-  ${it.groups
-    .map(
-      (g) => `
-    <section class="wk-day"${g.collapsed ? "" : " data-open"}>
-      <button class="wk-head" type="button" data-day-toggle>
-        <svg class="wk-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        <span class="wk-d">${g.label}</span>
-        ${g.sub ? `<span class="wk-date">${g.sub}</span>` : ""}
-        <span class="wk-n">${g.count}</span>
-        ${g.meta ? `<span class="wk-v">${g.meta}</span>` : ""}
-        ${g.note ? `<span class="wk-note">${g.note}</span>` : ""}
-      </button>
-      <div class="wk-calls">
-        ${g.items
-          .map(
-            (c) => `
-          <button class="wk-call${c.open === false ? " flat" : ""}" type="button"${c.open === false ? "" : ` data-pack="${c.id}"`}>
-            <span class="wk-time">${c.lead}</span>
-            <span class="wk-body">
-              <span class="wk-acct">${c.title}${c.person ? `<em>${c.person}</em>` : ""}</span>
-              <span class="wk-line">${c.headline}</span>
-            </span>
-            <span class="wk-meta">${c.right ?? ""}</span>
-            ${c.state ? `<span class="wk-state${c.state === "Not opened" ? " unread" : ""}">${c.state}</span>` : "<span></span>"}
-            ${c.flag ? `<span class="wk-flag">${c.flag}</span>` : ""}
-          </button>`,
-          )
-          .join("")}
-      </div>
-    </section>`,
-    )
-    .join("")}`;
-
-
-/* a dialling pack — what you need in the thirty seconds before you ring */
-CANVAS.dial = (id) => {
-  const p = DIALS[id];
+/* A pack is a SUBJECT, so it lives in the third pane, not the drawer.
+   It takes either an id or the agenda item that names one, because the
+   pane resolves every canvas the same way: CANVAS[shape](item). */
+CANVAS.dial = (it) => {
+  const p = DIALS[it.id ?? it];
   return `
-    <header>
+    <div class="canvas-head">
       <div>
-        <p class="drawer-kind">Number ${p.rank} today · ${p.mins}</p>
+        <p class="canvas-kind">Number ${p.rank} today · ${p.mins}</p>
         <h2>${p.account}</h2>
-        <p>${p.person} · ${p.meta}</p>
+        <p class="canvas-meta">${p.person} · ${p.meta}</p>
       </div>
-      <button class="icon-btn" type="button" data-close aria-label="Close">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </header>
-    <div class="drawer-body">
-      ${p.flag ? `<p class="pack-waiting flush">${p.flag} — deal with it before you dial, not after.</p>` : ""}
+      <div class="canvas-actions tight">
+        <button class="btn primary" type="button">Ring ${p.person.split(" ")[0]}</button>
+      </div>
+    </div>
 
-      <h3>Why it is number ${p.rank}</h3>
-      <p class="rn-p">${p.why}</p>
+    ${p.flag ? `<p class="pack-waiting">${p.flag} — deal with it before you dial, not after.</p>` : ""}
 
-      <h3>How to open</h3>
-      <p class="opener">“${p.opener}”</p>
+    <div class="canvas-cols" style="margin-top:16px">
+      <div>
+        <h3 class="canvas-h" style="margin-top:0">Why it is number ${p.rank}</h3>
+        <p class="rn-p">${p.why}</p>
+        <h3 class="canvas-h">How to open</h3>
+        <p class="opener">“${p.opener}”</p>
+      </div>
+      <div>
+        <h3 class="canvas-h" style="margin-top:0">Last time you spoke</h3>
+        <p class="rn-p">${p.last}</p>
+        <h3 class="canvas-h">If it goes badly</h3>
+        <p class="rn-p">${p.ifno}</p>
+      </div>
+    </div>
 
-      <h3>Have these ready</h3>
-      <ul class="ev">${p.ready.map((r) => `<li>${r}</li>`).join("")}</ul>
-
-      <h3>Last time you spoke</h3>
-      <p class="rn-p">${p.last}</p>
-
-      <h3>If it goes badly</h3>
-      <p class="rn-p">${p.ifno}</p>
-    </div>`;
+    <h3 class="canvas-h">Have these ready</h3>
+    <ul class="ev">${p.ready.map((r) => `<li>${r}</li>`).join("")}</ul>`;
 };
 
-/* one call's pack, in the drawer */
-CANVAS.pack = (id) => {
-  const p = WEEKCALLS[id];
+/* one call's pack — the third pane, reached from the week in column 2 */
+CANVAS.pack = (it) => {
+  const p = WEEKCALLS[it.id ?? it];
   return `
-    <header>
+    <div class="canvas-head">
       <div>
-        <p class="drawer-kind">${p.when}</p>
+        <p class="canvas-kind">${p.when}</p>
         <h2>${p.account}</h2>
-        <p>${p.person} · ${p.money} · renews ${p.renews} · last spoke ${p.lastSpoke}</p>
+        <p class="canvas-meta">${p.person} · ${p.money} · renews ${p.renews} · last spoke ${p.lastSpoke}</p>
       </div>
-      <button class="icon-btn" type="button" data-close aria-label="Close">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </header>
-    <div class="drawer-body">
-      ${p.waiting ? `<p class="pack-waiting flush">${p.waiting}</p>` : ""}
+      <div class="canvas-actions tight">
+        <button class="btn" type="button">Open the account</button>
+      </div>
+    </div>
+    <div class="pack-body">
+      ${p.waiting ? `<p class="pack-waiting">${p.waiting}</p>` : ""}
 
-      <h3>What moved since ${p.lastSpoke}</h3>
+      <h3 class="canvas-h">What moved since ${p.lastSpoke}</h3>
       <ul class="moved">
         ${p.changed.map((c) => `<li class="${c.dir}"><span class="mv-d">${c.date}</span><span class="mv-t">${c.text}</span></li>`).join("")}
       </ul>
 
-      <h3>What you said you'd do</h3>
+      <h3 class="canvas-h">What you said you'd do</h3>
       <ul class="promises">
         ${p.promises.map((q) => `<li class="${q.state}"><span class="pr-s">${q.state === "missed" ? "not done" : q.state === "done" ? "done" : "open"}</span><span>${q.text}</span></li>`).join("")}
       </ul>
 
       ${
         p.asked.length
-          ? `<h3>What they asked for</h3>
+          ? `<h3 class="canvas-h">What they asked for</h3>
              <ul class="promises">
                ${p.asked.map((q) => `<li class="${q.state}"><span class="pr-s">${q.state === "missed" ? "unanswered" : "open"}</span><span>${q.text}</span></li>`).join("")}
              </ul>`
           : ""
       }
 
-      <h3>On the call</h3>
+      <h3 class="canvas-h">On the call</h3>
       ${p.people.filter((x) => x.onCall).map((x) => `<div class="who"><span class="who-n">${x.name}</span><span class="who-r">${x.role}</span><span class="who-s">${x.note}</span></div>`).join("")}
-      <h3>Not on it, and matters</h3>
+      <h3 class="canvas-h">Not on it, and matters</h3>
       ${p.people.filter((x) => !x.onCall).map((x) => `<div class="who quiet"><span class="who-n">${x.name}</span><span class="who-r">${x.role}</span><span class="who-s">${x.note}</span></div>`).join("")}
 
-      <h3>What to raise</h3>
+      <h3 class="canvas-h">What to raise</h3>
       <ol class="agenda">
         ${p.raise.map((r) => `<li><span class="ag-w">${r.what}</span><span class="ag-y">${r.why}</span></li>`).join("")}
       </ol>
 
-      <h3>Leave it</h3>
+      <h3 class="canvas-h">Leave it</h3>
       <p class="pack-leave">${p.leave}</p>
     </div>`;
 };

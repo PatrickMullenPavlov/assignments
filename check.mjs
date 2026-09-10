@@ -2,7 +2,6 @@ import { CANVAS, RUNS } from "/Users/patrick/Desktop/trig-prototype/stepped.js";
 import { SETS, ACCOUNTS } from "/Users/patrick/Desktop/trig-prototype/cohort.js";
 import { LOGS } from "/Users/patrick/Desktop/trig-prototype/logs.js";
 import { RENEWALS } from "/Users/patrick/Desktop/trig-prototype/renewals.js";
-const BY_ID = new Set(["pack", "dial"]);
 const SENTINEL = new Set(["WRITES"]);
 const bad = [];
 let items = 0, agendas = 0;
@@ -14,7 +13,7 @@ for (const [n, r] of Object.entries(RUNS)) {
     for (const i of (r.groups ?? []).flatMap((g) => g.items)) {
       if (!i.shape) continue;
       items++;
-      BY_ID.has(i.shape) ? CANVAS[i.shape](i.id) : CANVAS[i.shape](i);
+      CANVAS[i.shape](i); // exactly how the third pane calls it
     }
   } catch (e) { bad.push(n + " → " + e.message); }
 }
@@ -47,6 +46,27 @@ let panes = 0;
 for (const a of ACCOUNTS) { if (CANVAS.trialPane(a.name).includes("undefined")) mismatch.push(a.name); panes++; }
 for (const r of RENEWALS) { if (CANVAS.renewalPane(r.account).includes("undefined")) mismatch.push(r.account); panes++; }
 console.log(mismatch.length ? "PANES WITH HOLES: " + mismatch.join(", ") : `ok: ${panes} depth panes, no holes`);
+
+/* A canvas knows which surface it is on. Moving one from the drawer to the
+   third pane and leaving its <header>, close button and .drawer-body behind
+   renders a drawer inside a column — which is how the packs broke. */
+const CHROME = /drawer-body|drawer-kind|data-close/;
+const wrong = [];
+for (const [n, r] of Object.entries(RUNS)) {
+  const paneHtml = [
+    r.single && CANVAS[r.single.shape](r.single),
+    r.report && CANVAS[r.report.shape](r.report),
+    ...(r.groups ?? []).flatMap((g) => g.items).filter((i) => i.shape).map((i) => CANVAS[i.shape](i)),
+  ].filter(Boolean);
+  if (paneHtml.some((h) => CHROME.test(h))) wrong.push(n + " renders drawer chrome in the pane");
+}
+for (const a of ACCOUNTS.slice(0, 1)) if (CHROME.test(CANVAS.trialPane(a.name))) wrong.push("trialPane");
+for (const r of RENEWALS.slice(0, 1)) if (CHROME.test(CANVAS.renewalPane(r.account))) wrong.push("renewalPane");
+// and the reverse: a drawer with no way out
+for (const k of new Set(doors)) if (!/data-close/.test(CANVAS.set(k))) wrong.push("drawer " + k + " has no close");
+for (const k of Object.keys(LOGS)) if (!/data-close/.test(CANVAS.log(k))) wrong.push("log " + k + " has no close");
+console.log(wrong.length ? "WRONG SURFACE: " + wrong.join(", ")
+  : "ok: no pane renders drawer chrome, and every drawer can be closed");
 
 /* Every data-* hook a row is given must be one a handler listens for.
    Rendering proves nothing about this: a row can carry data-name forever
