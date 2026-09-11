@@ -1216,3 +1216,54 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   text-transform: uppercase; color: var(--ink-3);
 }
 .pack-body { max-width: 720px; }
+
+/* ------------------------------------------------------ assignment builder
+   One question, then a brief. The brief reuses the table row so a line you
+   are correcting sits at the same x as a row in the list behind it. */
+.bd { max-width: 780px; padding: 4px 0 24px; }
+.bd-head { margin: 0 0 18px; }
+.bd-head h2 { margin: 0 0 5px; font-size: var(--t-lg); font-weight: 500; letter-spacing: -0.005em; }
+
+.bd-ask { display: flex; gap: 10px; align-items: center; }
+.bd-input {
+  flex: 1 1 auto; min-width: 0; height: 40px; padding: 0 14px;
+  font: inherit; font-size: var(--t-md); color: var(--ink);
+  background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
+}
+.bd-input::placeholder { color: var(--ink-3); }
+.bd-input:focus { outline: 2px solid #25508e; outline-offset: -1px; border-color: transparent; }
+
+.bd-eg { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 16px; }
+.bd-eg-label {
+  font-size: var(--t-label); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-3); margin-right: 3px;
+}
+.bd-chip {
+  border: 1px solid var(--rule); background: var(--panel2); border-radius: var(--r-pill);
+  padding: 5px 11px; font: inherit; font-size: var(--t-xs); color: var(--ink-2); cursor: pointer;
+}
+.bd-chip:hover { background: var(--white); color: var(--ink); box-shadow: var(--shadow-nav); }
+
+.bd-ok { margin: 0 0 6px; font-size: var(--t-sm); line-height: var(--lh-sm); color: #077764; }
+
+.bd-verdict { border-radius: var(--r-md); padding: 16px 18px; margin: 0 0 6px; }
+.bd-verdict.ask { background: #fffaf2; border: 1px solid #f0e2cc; }
+.bd-verdict.q { background: var(--panel2); border: 1px solid var(--edge); }
+.bd-v-t { margin: 0 0 6px; font-size: var(--t-md); font-weight: 500; }
+.bd-v-a { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
+
+.bd-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.bd-opt { display: flex; align-items: baseline; gap: 9px; font-size: var(--t-sm); cursor: pointer; }
+
+/* the brief's lines, on the same grid as a table row */
+.table.bd-lines { padding: 0; }
+.table.bd-lines .row { grid-template-columns: 150px 220px 1fr 92px; gap: 16px; align-items: baseline; }
+.table.bd-lines .row.head { padding: 0; background: none; border: 0; min-height: 0; }
+.bd-label { font-size: var(--t-xs); color: var(--ink-3); }
+.bd-value { font-size: var(--t-sm); font-weight: 500; }
+.bd-note { font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-2); }
+.bd-change { text-align: right; }
+.bd-line .bd-change .btn { opacity: 0; }
+.bd-line:hover .bd-change .btn,
+.bd-line:focus-within .bd-change .btn { opacity: 1; }
+.bd-verdict.ok { background: #f2faf7; border: 1px solid #cfe8df; }

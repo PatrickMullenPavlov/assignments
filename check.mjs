@@ -98,7 +98,7 @@ const src = readdirSync(DIR)
 
 const kebab = (s) => s.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
 const written = new Set([
-  ...[...src.matchAll(/\sdata-([a-z0-9-]+)=/g)].map((m) => m[1]),
+  ...[...src.matchAll(/\sdata-([a-z0-9-]+)[=>\s]/g)].map((m) => m[1]),
   ...[...src.matchAll(/\.dataset\.([A-Za-z0-9]+)\s*=[^=]/g)].map((m) => kebab(m[1])),
 ]);
 // a hook is read if a handler queries it OR the stylesheet selects on it
