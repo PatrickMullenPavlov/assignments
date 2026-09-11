@@ -141,18 +141,20 @@ const lineRows = (lines) =>
 function ask(text) {
   return `
     <div class="bd">
-      <div class="bd-head">
-        <h2>Add an assignment</h2>
-        <p class="canvas-meta">Say what you want Trig to do. It reads it back before anything runs.</p>
+      <div class="bd-q">
+        <h2>What do you want Trig to do?</h2>
+        <form class="bd-ask">
+          <input class="bd-input" name="ask" autocomplete="off" placeholder="Prep me for my 1:1s each week"
+                 value="${text ?? ""}" aria-label="What do you want Trig to do?">
+          <button class="btn primary" type="submit">Read it back</button>
+        </form>
+        <p class="bd-hint">Say it the way you would to a colleague. Trig reads it back before anything runs.</p>
       </div>
-      <form class="bd-ask">
-        <input class="bd-input" name="ask" autocomplete="off" placeholder="Prep me for my 1:1s each week"
-               value="${text ?? ""}" aria-label="What do you want Trig to do?">
-        <button class="btn primary" type="submit">Read it back</button>
-      </form>
       <div class="bd-eg">
-        <span class="bd-eg-label">Try</span>
-        ${EXAMPLES.map((x) => `<button class="bd-chip" type="button" data-bd-eg="${x}">${x}</button>`).join("")}
+        <p class="bd-eg-label">Or start from one of these</p>
+        <div class="bd-eg-row">
+          ${EXAMPLES.map((x) => `<button class="bd-chip" type="button" data-bd-eg="${x}">${x}</button>`).join("")}
+        </div>
       </div>
     </div>`;
 }

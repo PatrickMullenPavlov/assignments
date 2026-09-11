@@ -14,6 +14,9 @@
   --ink-2:  #667177;
   --ink-3:  #8c9196;
 
+  /* every section-level component sits on this gutter: the head, the
+     filter note, the table and the builder all line up on it */
+  --gutter: 24px;
   --shadow-card: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
   --shadow-nav:  0 2px 1px rgba(140, 145, 150, 0.05);
 
@@ -153,7 +156,7 @@ html, body {
 
 .titlebar {
   position: relative; height: 58px; flex: none;
-  display: flex; align-items: center; padding: 0 24px;
+  display: flex; align-items: center; padding: 0 var(--gutter);
   border-bottom: 1px solid var(--rule);
 }
 .titlebar h1 { margin: 0; font-size: var(--t-lg); font-weight: 400; color: var(--ink-2); }
@@ -163,7 +166,7 @@ html, body {
 
 .tabs {
   display: flex; align-items: flex-end; gap: 24px;
-  padding: 15px 24px 0;
+  padding: 15px var(--gutter) 0;
   border-bottom: 1px solid var(--rule);
 }
 .tab {
@@ -176,7 +179,7 @@ html, body {
 /* ---------------------------------------------------------------- stats */
 
 .stats { display: flex; border-bottom: 1px solid var(--rule); }
-.stat { flex: 1 1 0; padding: 14px 24px; min-width: 0; }
+.stat { flex: 1 1 0; padding: 14px var(--gutter); min-width: 0; }
 .stat + .stat { border-left: 1px solid var(--rule); }
 .stat dt { font-size: var(--t-md); color: var(--ink-2); margin: 0 0 5px; }
 .stat dd {
@@ -188,7 +191,7 @@ html, body {
 
 .section-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px 14px;
+  padding: 20px var(--gutter) 14px;
 }
 .section-head h2 { margin: 0; font-size: var(--t-lg); font-weight: 500; }
 
@@ -218,7 +221,7 @@ html, body {
 
 /* ---------------------------------------------------------------- table */
 
-.table { padding: 0 24px; }
+.table { padding: 0 var(--gutter); }
 .table .row {
   display: grid;
   grid-template-columns: 1fr 300px 300px 300px 300px;
@@ -260,7 +263,7 @@ html, body {
 
 /* ---------------------------------------------------------------- cards */
 
-.cards { padding: 0 24px 8px; display: flex; flex-wrap: wrap; gap: 14px; }
+.cards { padding: 0 var(--gutter) 8px; display: flex; flex-wrap: wrap; gap: 14px; }
 .cards .card {
   flex: 1 1 calc(33.333% - 10px); min-width: 0; height: 64px;
   background: var(--panel2);
@@ -405,10 +408,10 @@ ol.steps li::before {
   --sk-hot: #b9c8de; /* the emphasised one */
 }
 
-.section-sub { margin: -8px 0 0; padding: 0 24px 4px; font-size: var(--t-md); color: var(--ink-2); }
+.section-sub { margin: -8px 0 0; padding: 0 var(--gutter) 4px; font-size: var(--t-md); color: var(--ink-2); }
 
 .reports-grid {
-  padding: 4px 24px 8px;
+  padding: 4px var(--gutter) 8px;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 20px;
 }
 
@@ -536,10 +539,10 @@ body:not([data-page="dashboard"]) .titlebar h1 { font-weight: 500; color: var(--
 
 section.full { padding-top: 18px; }
 section.full > .table, section.full > .reports-grid { padding-top: 0; }
-.section-sub.flush { margin: 0 0 16px; padding: 0 24px; }
+.section-sub.flush { margin: 0 0 16px; padding: 0 var(--gutter); }
 
 /* the filter says what it cannot do, rather than quietly doing nothing */
-.filter-note { margin: 0 0 12px; padding: 0 24px; font-size: var(--t-sm); color: var(--ink-3); }
+.filter-note { margin: 0 0 12px; padding: 0 var(--gutter); font-size: var(--t-sm); color: var(--ink-3); }
 .filter-note:empty { display: none; }
 
 /* The narrow variant of the assignments table: identical rows, identical
@@ -561,7 +564,7 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
    half for the work. Below lg they even out to thirds, because at that
    width a 50% canvas is narrower than the two columns feeding it.
    lg is 1024px — Tailwind v4's default, which the app does not override. */
-.col-list { flex: 0 0 25%; border-right: 1px solid var(--rule); padding: 0 24px 14px; }
+.col-list { flex: 0 0 25%; border-right: 1px solid var(--rule); padding: 0 var(--gutter) 14px; }
 .col-subjects { flex: 0 0 25%; border-right: 1px solid var(--rule); padding: 0 8px 8px; }
 /* grows, so when a run makes one thing and column 2 steps out of the
    way, the canvas takes the quarter it left behind rather than a gap */
@@ -1220,27 +1223,40 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 /* ------------------------------------------------------ assignment builder
    One question, then a brief. The brief reuses the table row so a line you
    are correcting sits at the same x as a row in the list behind it. */
-.bd { max-width: 780px; padding: 4px 0 24px; }
+/* 768 = 720 of content plus the gutter either side, so its left edge
+   lands where every other row on the page does */
+.bd { max-width: 768px; padding: 4px var(--gutter) 24px; }
 .bd-head { margin: 0 0 18px; }
 .bd-head h2 { margin: 0 0 5px; font-size: var(--t-lg); font-weight: 500; letter-spacing: -0.005em; }
 
-.bd-ask { display: flex; gap: 10px; align-items: center; }
+/* the one question. The page title already says Assignments, so this asks
+   rather than repeating the label on the button you just pressed. */
+.bd-q { margin: 0 0 30px; }
+.bd-q h2 { margin: 0 0 12px; font-size: var(--t-lg); font-weight: 500; letter-spacing: -0.005em; }
+.bd-ask { display: flex; gap: 8px; align-items: center; }
 .bd-input {
-  flex: 1 1 auto; min-width: 0; height: 40px; padding: 0 14px;
+  flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 14px;
   font: inherit; font-size: var(--t-md); color: var(--ink);
   background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
+  transition: border-color .12s ease, box-shadow .12s ease;
 }
 .bd-input::placeholder { color: var(--ink-3); }
-.bd-input:focus { outline: 2px solid #25508e; outline-offset: -1px; border-color: transparent; }
-
-.bd-eg { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 16px; }
-.bd-eg-label {
-  font-size: var(--t-label); letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--ink-3); margin-right: 3px;
+.bd-input:focus {
+  outline: none; border-color: var(--ink-3);
+  box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1);
 }
+.bd-ask .btn { height: 44px; }
+.bd-hint { margin: 9px 0 0; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
+
+.bd-eg { border-top: 1px solid var(--rule); padding-top: 18px; }
+.bd-eg-label {
+  margin: 0 0 9px; font-size: var(--t-label); letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.bd-eg-row { display: flex; flex-wrap: wrap; gap: 7px; }
 .bd-chip {
   border: 1px solid var(--rule); background: var(--panel2); border-radius: var(--r-pill);
-  padding: 5px 11px; font: inherit; font-size: var(--t-xs); color: var(--ink-2); cursor: pointer;
+  padding: 6px 12px; font: inherit; font-size: var(--t-xs); color: var(--ink-2); cursor: pointer;
 }
 .bd-chip:hover { background: var(--white); color: var(--ink); box-shadow: var(--shadow-nav); }
 

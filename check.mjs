@@ -129,3 +129,20 @@ const unstyled = [...used].filter((c) => !styled.has(c)).sort();
 console.log(unstyled.length
   ? "CLASSES WITH NO RULE: " + unstyled.map((c) => "." + c).join(", ")
   : `ok: all ${used.size} classes in the markup have a rule`);
+
+/* The section gutter is a token. A literal 24px in a horizontal padding is
+   almost always it written out again — which is how the builder ended up
+   flush against the edge while every row beside it was inset. */
+const horiz = (v) => {           // the left/right parts of a padding shorthand
+  const p = v.trim().split(/\s+/);
+  return p.length === 1 ? [p[0]] : p.length === 3 ? [p[1]] : [p[1], p[3] ?? p[1]];
+};
+const strays = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+  .flatMap(([, sel, body]) =>
+    [...body.matchAll(/(?:^|;)\s*padding:\s*([^;]+)/g)]
+      .filter((m) => { const h = horiz(m[1]); return h.every((x) => x === "24px"); })
+      .map(() => sel.replace(/\/\*[\s\S]*?\*\//g, "").trim().replace(/\s+/g, " ")))
+  .filter((sel) => !sel.startsWith(":root"));
+console.log(strays.length
+  ? "GUTTER WRITTEN OUT INSTEAD OF --gutter: " + strays.join(", ")
+  : "ok: every section gutter comes from the token");
