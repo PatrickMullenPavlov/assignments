@@ -1221,19 +1221,9 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .pack-body { max-width: 720px; }
 
 /* ------------------------------------------------------ assignment builder
-   One question, then a brief. The brief reuses the table row so a line you
-   are correcting sits at the same x as a row in the list behind it. */
-/* 768 = 720 of content plus the gutter either side, so its left edge
-   lands where every other row on the page does */
-.bd { max-width: 768px; padding: 4px var(--gutter) 24px; }
-.bd-head { margin: 0 0 18px; }
-.bd-head h2 { margin: 0 0 5px; font-size: var(--t-lg); font-weight: 500; letter-spacing: -0.005em; }
-
-/* the one question. The page title already says Assignments, so this asks
-   rather than repeating the label on the button you just pressed. */
-.bd-q { margin: 0 0 30px; }
-.bd-q h2 { margin: 0 0 12px; font-size: var(--t-lg); font-weight: 500; letter-spacing: -0.005em; }
-.bd-ask { display: flex; gap: 8px; align-items: center; }
+   Lives in the drawer, so it inherits the drawer's type and spacing. Only the
+   parts the drawer has no component for are defined here. */
+.bd-ask { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
 .bd-input {
   flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 14px;
   font: inherit; font-size: var(--t-md); color: var(--ink);
@@ -1241,45 +1231,43 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   transition: border-color .12s ease, box-shadow .12s ease;
 }
 .bd-input::placeholder { color: var(--ink-3); }
-.bd-input:focus {
-  outline: none; border-color: var(--ink-3);
-  box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1);
-}
+.bd-input:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1); }
 .bd-ask .btn { height: 44px; }
 .bd-hint { margin: 9px 0 0; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
 
-.bd-eg { border-top: 1px solid var(--rule); padding-top: 18px; }
-.bd-eg-label {
-  margin: 0 0 9px; font-size: var(--t-label); letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--ink-3);
-}
-.bd-eg-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.bd-eg { display: flex; flex-wrap: wrap; gap: 7px; }
 .bd-chip {
   border: 1px solid var(--rule); background: var(--panel2); border-radius: var(--r-pill);
-  padding: 6px 12px; font: inherit; font-size: var(--t-xs); color: var(--ink-2); cursor: pointer;
+  padding: 6px 12px; font: inherit; font-size: var(--t-xs); color: var(--ink-2);
+  cursor: pointer; text-align: left;
 }
 .bd-chip:hover { background: var(--white); color: var(--ink); box-shadow: var(--shadow-nav); }
 
-.bd-ok { margin: 0 0 6px; font-size: var(--t-sm); line-height: var(--lh-sm); color: #077764; }
+.bd-ok { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: #077764; }
 
-.bd-verdict { border-radius: var(--r-md); padding: 16px 18px; margin: 0 0 6px; }
+.bd-verdict { border-radius: var(--r-md); padding: 15px 17px; margin: 0; }
 .bd-verdict.ask { background: #fffaf2; border: 1px solid #f0e2cc; }
 .bd-verdict.q { background: var(--panel2); border: 1px solid var(--edge); }
+.bd-verdict.ok { background: #f2faf7; border: 1px solid #cfe8df; }
 .bd-v-t { margin: 0 0 6px; font-size: var(--t-md); font-weight: 500; }
 .bd-v-a { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
 
-.bd-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.bd-opt { display: flex; align-items: baseline; gap: 9px; font-size: var(--t-sm); cursor: pointer; }
+.bd-opts { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+.bd-opt, .bd-mark { display: flex; align-items: baseline; gap: 9px; font-size: var(--t-sm); cursor: pointer; }
+.bd-mark { padding: 9px 0; border-bottom: 1px solid var(--rule); }
+.bd-mark:last-of-type { border-bottom: 0; }
 
-/* the brief's lines, on the same grid as a table row */
-.table.bd-lines { padding: 0; }
-.table.bd-lines .row { grid-template-columns: 150px 220px 1fr 92px; gap: 16px; align-items: baseline; }
-.table.bd-lines .row.head { padding: 0; background: none; border: 0; min-height: 0; }
+/* one line of the brief: a label, what Trig understood, and a way to say no */
+.bd-line {
+  display: grid; grid-template-columns: 132px minmax(0, 1fr) 76px;
+  gap: 14px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--rule);
+}
+.bd-line:last-of-type { border-bottom: 0; }
+.bd-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .bd-label { font-size: var(--t-xs); color: var(--ink-3); }
 .bd-value { font-size: var(--t-sm); font-weight: 500; }
 .bd-note { font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-2); }
 .bd-change { text-align: right; }
-.bd-line .bd-change .btn { opacity: 0; }
-.bd-line:hover .bd-change .btn,
-.bd-line:focus-within .bd-change .btn { opacity: 1; }
-.bd-verdict.ok { background: #f2faf7; border: 1px solid #cfe8df; }
+.bd-line .btn { opacity: 0; }
+.bd-line:hover .btn, .bd-line:focus-within .btn, .bd-line.editing .btn { opacity: 1; }
+.bd-line.editing { background: var(--panel2); border-radius: 6px; padding: 11px 10px; margin: 0 -10px; }
