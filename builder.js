@@ -70,9 +70,16 @@ const UNARY = ["is_null", "is_not_null"];
 /* What Trig can reach. Shown up front, because the alternative is finding
    out at run time that Gong was never connected. */
 const TOOLS = [
-  ["HubSpot", true], ["Salesforce", true], ["Google Calendar", true],
-  ["Gmail", true], ["Slack", true], ["Gong", false], ["Zoom", false],
+  ["HubSpot", true, "HubspotLogo"],
+  ["Salesforce", true, "SalesforceLogo"],
+  ["Google Calendar", true, "GoogleCalendarLogo"],
+  ["Gmail", true, "GmailLogo"],
+  ["Slack", true, "SlackLogo"],
+  ["Trig", true, "TrigLogo"],
+  ["Gong", false, "GongLogo"],
+  ["Zoom", false, "ZoomLogo"],
 ];
+const TOOL = (n) => TOOLS.find(([t]) => t === n);
 
 /* Three groups, in Patrick's own framing: inputs, actions, outputs.
    A tool sits beside the line that uses it, because "the tools it has" as a
@@ -174,6 +181,12 @@ let trigger = {
 };
 let prompt = "";
 
+/* The plan being reviewed, and which of its lines is open for editing. It is
+   a copy, because the person is correcting this assignment rather than the
+   template it was matched from. */
+let current = null;
+let edit = null;
+
 /* Reads the way ScheduleLabel does: "Every day", not "Every 1 days". */
 const triggerLabel = () => {
   if (trigger.kind === "schedule") {
@@ -229,11 +242,7 @@ const form = () => `
              <select class="bd-sel" data-bd-op aria-label="Operator">
                ${OPS.map(([k, l]) => `<option value="${k}"${k === trigger.op ? " selected" : ""}>${l}</option>`).join("")}
              </select>
-             ${
-               UNARY.includes(trigger.op)
-                 ? ""
-                 : `<input class="bd-num" value="${trigger.val}" data-bd-val aria-label="Value">`
-             }
+             ${UNARY.includes(trigger.op) ? "" : `<input class="bd-num" value="${trigger.val}" data-bd-val aria-label="Value">`}
            </div>`
     }
 
@@ -248,30 +257,59 @@ const form = () => `
 
     <h3>Or start from one of these</h3>
     <div class="bd-eg">
-      ${EXAMPLES.map(
-        ([x], i) => `<button class="bd-chip" type="button" data-bd-eg="${i}">${x}</button>`,
-      ).join("")}
+      ${EXAMPLES.map(([x], i) => `<button class="bd-chip" type="button" data-bd-eg="${i}">${x}</button>`).join("")}
     </div>
   </div>`;
 
 /* ------------------------------------------------------------ the plan */
 
-const isOn = (t) => (TOOLS.find(([n]) => n === t) ?? [, false])[1];
+const isOn = (t) => (TOOL(t) ?? [, false])[1];
 const asRow = (r) => (Array.isArray(r) ? [null, r[0], r[1]] : [null, r]);
+const plain = (t) => String(t).replace(/<[^>]+>/g, "");
 
-/* One line of the plan. The tool has its own column so every line in a group
-   starts at the same x, and an action with no tool reads as a deliberate gap
-   rather than a missing word. */
-const line = ([tool, text, wrong]) => `
-  <div class="pl-line${wrong ? " wrong" : ""}">
-    <span class="pl-tool">${
-      tool ? `<span class="bd-tool${isOn(tool) ? "" : " off"}">${tool}</span>` : ""
-    }</span>
+const icon = (name) => {
+  const t = TOOL(name);
+  return t
+    ? `<img class="pl-icon${t[1] ? "" : " off"}" src="assets/brands/${t[2]}.svg" alt="" width="18" height="18">`
+    : "";
+};
+
+/* One line. Inputs and outputs carry a tool so they get the icon column;
+   actions carry none, so their group drops the column rather than indenting
+   past an empty one.
+
+   Every line can be changed here. Rewriting the whole prompt to move one
+   destination would be absurd, and this is the screen where you notice. */
+const line = (key, [tool, text, wrong], i) => `
+  <div class="pl-line${wrong ? " wrong" : ""}${tool === null ? " bare" : ""}">
+    ${tool === null ? "" : `<span class="pl-tool">${icon(tool)}<span class="pl-name">${tool}</span></span>`}
     <span class="pl-text">${text}</span>
+    <button class="pl-edit" type="button" data-bd-step="${key}:${i}">Change</button>
   </div>`;
 
-const group = (title, rows, extra = "") =>
-  rows.length ? `<h3>${title}</h3>${rows.map(line).join("")}${extra}` : "";
+const editing = (key, i, [tool, text]) => `
+  <div class="pl-line open${tool === null ? " bare" : ""}">
+    ${
+      tool === null
+        ? ""
+        : `<span class="pl-tool">
+             <select class="bd-sel tool" data-bd-tool="${key}:${i}" aria-label="Which tool">
+               ${TOOLS.map(([t, on]) => `<option${t === tool ? " selected" : ""}>${t}${on ? "" : " — not connected"}</option>`).join("")}
+             </select>
+           </span>`
+    }
+    <span class="pl-text">
+      <input class="bd-input line" value="${plain(text)}" data-bd-text="${key}:${i}" aria-label="What this step does">
+    </span>
+    <button class="pl-edit on" type="button" data-bd-step="">Done</button>
+  </div>`;
+
+const group = (title, key, rows, extra = "") =>
+  rows.length
+    ? `<h3${rows[0][0] === null ? ' class="bare"' : ""}>${title}</h3>` +
+      rows.map((r, i) => (edit === `${key}:${i}` ? editing(key, i, r) : line(key, r, i))).join("") +
+      extra
+    : "";
 
 const planned = (p, text) => `
   <header>
@@ -284,9 +322,11 @@ const planned = (p, text) => `
   <div class="drawer-body">
     <p class="bd-echo">&ldquo;${text}&rdquo;</p>
 
-    ${group("Inputs we'll use", p.inputs, `<div class="pl-add"><button class="btn sm" type="button" data-bd-edit>Add a tool</button></div>`)}
-    ${group("Actions we'll apply", p.actions.map(asRow))}
-    ${group("Outputs we'll produce", p.outputs)}
+    ${group("Inputs we'll use", "inputs", p.inputs,
+      `<div class="pl-add"><button class="btn sm" type="button" data-bd-add="inputs">Add an input</button></div>`)}
+    ${group("Actions we'll apply", "actions", p.actions.map(asRow))}
+    ${group("Outputs we'll produce", "outputs", p.outputs,
+      `<div class="pl-add"><button class="btn sm" type="button" data-bd-add="outputs">Add an output</button></div>`)}
     ${p.note ? `<p class="bd-said warn">${p.note}</p>` : ""}
 
     <div class="canvas-actions">
@@ -294,7 +334,7 @@ const planned = (p, text) => `
         p.dead
           ? `<button class="btn" type="button" data-bd-back>Bin it and start again</button>`
           : `<button class="btn primary" type="button" data-bd-accept="${p.name}">Start running it</button>
-             ${p.fix ? `<button class="btn" type="button" data-bd-edit>${p.fix}</button>` : ""}
+             ${p.fix ? `<button class="btn" type="button" data-bd-add="inputs">${p.fix}</button>` : ""}
              <button class="btn" type="button" data-bd-back>Change the prompt</button>`
       }
     </div>
@@ -319,22 +359,49 @@ const running = (name) => `
 /* --------------------------------------------------------------- wiring */
 
 const openForm = () => {
+  edit = null;
   showDrawer(form());
   drawerEl.querySelector(".bd-input")?.focus();
 };
 
+const draw = () => {
+  showDrawer(planned(current, prompt));
+  drawerEl.querySelector(".bd-input.line, .bd-sel.tool")?.focus();
+};
+
 const openPlan = (text) => {
   prompt = text;
-  showDrawer(planned(plan(text), text));
+  edit = null;
+  const p = plan(text);
+  /* A copy: from here on you are correcting this assignment, not the template
+     it matched. Actions normalise to the same three-part shape as the rest. */
+  current = {
+    ...p,
+    inputs: p.inputs.map((r) => [...r]),
+    actions: p.actions.map((r) => asRow(r)),
+    outputs: p.outputs.map((r) => [...r]),
+  };
+  draw();
 };
 
 const typed = () => (drawerEl.querySelector('[name="ask"]')?.value ?? "").trim();
+const at = (ref) => {
+  const [key, i] = ref.split(":");
+  return [key, Number(i)];
+};
 
-/* The schedule and condition controls change rather than click. Re-rendering
-   the form on each one keeps the header label honest as you set it. */
 drawerEl.addEventListener("change", (e) => {
   const t = e.target;
   const v = t.value;
+
+  const tool = t.closest("[data-bd-tool]");
+  if (tool) {
+    const [key, i] = at(tool.dataset.bdTool);
+    current[key][i][0] = v.replace(/ — not connected$/, "");
+    current[key][i][2] = false; // you have said what it should be
+    return draw();
+  }
+
   if (t.matches("[data-bd-every]")) trigger = { ...trigger, every: Math.max(1, Number(v) || 1) };
   else if (t.matches("[data-bd-unit]")) trigger = { ...trigger, unit: v };
   else if (t.matches("[data-bd-attr]"))
@@ -344,6 +411,15 @@ drawerEl.addEventListener("change", (e) => {
   else return;
   prompt = typed();
   openForm();
+});
+
+/* Typing into a line keeps it, so closing the row does not lose the edit. */
+drawerEl.addEventListener("input", (e) => {
+  const box = e.target.closest("[data-bd-text]");
+  if (!box) return;
+  const [key, i] = at(box.dataset.bdText);
+  current[key][i][1] = box.value;
+  current[key][i][2] = false;
 });
 
 document.addEventListener("click", (e) => {
@@ -383,12 +459,20 @@ document.addEventListener("click", (e) => {
 
   if (e.target.closest("[data-bd-back]")) return openForm();
 
+  const step = e.target.closest("[data-bd-step]");
+  if (step) {
+    edit = step.dataset.bdStep || null;
+    return draw();
+  }
+
+  const add = e.target.closest("[data-bd-add]");
+  if (add) {
+    const key = add.dataset.bdAdd;
+    current[key].push(["HubSpot", "Say what this should do"]);
+    edit = `${key}:${current[key].length - 1}`;
+    return draw();
+  }
+
   const accept = e.target.closest("[data-bd-accept]");
   if (accept) return showDrawer(running(accept.dataset.bdAccept));
-
-  /* Correcting a line means saying it again in your own words, which runs
-     the interpretation afresh. Davy called that half a step from a chat
-     interface, and he is right — it is the open question here. */
-  const edit = e.target.closest("[data-bd-edit]");
-  if (edit) return openForm();
 });

@@ -1,3 +1,6 @@
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+const DIR = "/Users/patrick/Desktop/trig-prototype/";
+
 import { CANVAS, RUNS, resolve } from "/Users/patrick/Desktop/trig-prototype/stepped.js";
 import { SETS, ACCOUNTS } from "/Users/patrick/Desktop/trig-prototype/cohort.js";
 import { LOGS } from "/Users/patrick/Desktop/trig-prototype/logs.js";
@@ -109,11 +112,31 @@ if (builderErr) {
   );
 }
 
+/* Every tool a plan names must be one the builder knows, or the line renders
+   a broken image where its icon should be. */
+const bsrc = readFileSync("/Users/patrick/Desktop/trig-prototype/builder.js", "utf8");
+const kit = bsrc.slice(bsrc.indexOf("const TOOLS = ["), bsrc.indexOf("const plan = (text)"));
+const sandbox = await import(
+  "data:text/javascript," +
+    encodeURIComponent(kit + "\nexport { TOOLS, PLANS, FALLBACK };")
+);
+const iconFor = new Map(sandbox.TOOLS.map(([n, , f]) => [n, f]));
+const badTool = [];
+for (const p of [...sandbox.PLANS, sandbox.FALLBACK]) {
+  for (const [tool] of [...p.inputs, ...p.outputs]) {
+    if (!tool) continue;
+    if (!iconFor.has(tool)) badTool.push(`${p.name}: ${tool} is not a tool`);
+    else if (!existsSync(`${DIR}assets/brands/${iconFor.get(tool)}.svg`))
+      badTool.push(`${p.name}: ${tool} has no icon file`);
+  }
+}
+console.log(badTool.length
+  ? "TOOLS WITHOUT AN ICON: " + badTool.join(", ")
+  : `ok: every tool named in a plan has an icon, ${iconFor.size} in the kit`);
+
 /* Every data-* hook a row is given must be one a handler listens for.
    Rendering proves nothing about this: a row can carry data-name forever
    while every handler reads data-pick, and it just quietly stops opening. */
-import { readFileSync, readdirSync } from "node:fs";
-const DIR = "/Users/patrick/Desktop/trig-prototype/";
 const src = readdirSync(DIR)
   .filter((f) => f.endsWith(".js") && f !== "serve.py")
   .map((f) => readFileSync(DIR + f, "utf8"))
