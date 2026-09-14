@@ -1256,27 +1256,29 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 }
 .bd-said.warn { background: #fffaf2; border-color: #f0e2cc; color: #8a6a35; margin-top: 12px; }
 
-/* one step of the plan. `wrong` is the whole point: a guess you can see */
-.bd-step {
-  display: grid; grid-template-columns: 22px minmax(0, 1fr) 76px;
-  gap: 13px; align-items: start; padding: 13px 0; border-bottom: 1px solid var(--rule);
+/* The prompt, quietly. You typed it ten seconds ago. */
+.bd-echo { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-3); font-style: italic; }
+
+/* One line of the plan. The tool has its own column so every line in a group
+   starts at the same x, and an action with no tool reads as a deliberate gap
+   rather than a missing word. */
+.pl-line {
+  display: grid; grid-template-columns: 128px minmax(0, 1fr);
+  gap: 14px; align-items: baseline; padding: 9px 0;
 }
-.bd-step:last-of-type { border-bottom: 0; }
-.bd-n {
-  font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums;
-  line-height: var(--lh-sm);
+.pl-line + .pl-line { border-top: 1px solid var(--rule); }
+.pl-text { font-size: var(--t-sm); line-height: var(--lh-sm); }
+.pl-tool { display: flex; }
+.pl-add { padding-top: 10px; }
+
+/* A guess. The only thing on this screen that shouts, because catching it is
+   the whole reason the screen exists. */
+.pl-line.wrong .pl-text { color: #ba4325; }
+.pl-line.wrong .bd-tool { border-color: #e3b9ad; color: #ba4325; }
+
+@media (max-width: 560px) {
+  .pl-line { grid-template-columns: 1fr; gap: 4px; }
 }
-.bd-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.bd-label {
-  font-size: var(--t-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
-}
-.bd-value { font-size: var(--t-sm); line-height: var(--lh-sm); }
-.bd-note { font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); margin-top: 2px; }
-.bd-change { text-align: right; }
-.bd-step .btn { opacity: 0; }
-.bd-step:hover .btn, .bd-step:focus-within .btn, .bd-step.wrong .btn { opacity: 1; }
-.bd-step.wrong .bd-value { color: #ba4325; }
-.bd-step.wrong .bd-n { color: #ba4325; }
 
 .bd-verdict { border-radius: var(--r-md); padding: 15px 17px; margin: 0; }
 .bd-verdict.ok { background: #f2faf7; border: 1px solid #cfe8df; }

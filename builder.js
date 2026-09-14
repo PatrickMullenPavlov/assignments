@@ -74,63 +74,70 @@ const TOOLS = [
   ["Gmail", true], ["Slack", true], ["Gong", false], ["Zoom", false],
 ];
 
-/* Four steps: what it gets, what it does to it, what it makes, where it
-   goes. `wrong` marks a step the interpretation got wrong — the thing a
-   person is here to catch. */
+/* Three groups, in Patrick's own framing: inputs, actions, outputs.
+   A tool sits beside the line that uses it, because "the tools it has" as a
+   separate list tells you what is connected and not what gets used when.
+   Actions carry no tool — they happen inside, on what the inputs fetched.
+
+   A trailing `true` marks a line the interpretation guessed at. That is the
+   thing a person is here to catch, so it is the only thing that shouts. */
 const PLANS = [
   {
     match: /1:1|one to one|prep.*call|call.*prep|prep.*1:1/i,
     name: "Prep my 1:1s",
-    steps: [
-      ["What it gets", "Every customer call in their calendar for the coming week, and the account behind each one", "Google Calendar, HubSpot"],
-      ["What it does to it", "Reads what moved since they last spoke, what was promised, and who has gone quiet", ""],
-      ["What it makes", "One pack per call &mdash; 11 this week", ""],
-      ["Where it goes", "Into Trig, ready on Monday morning", ""],
+    inputs: [
+      ["Google Calendar", "Every customer call in their calendar for the coming week"],
+      ["HubSpot", "The account behind each call, and everything that moved since they last spoke"],
     ],
+    actions: [
+      "Works out what was promised last time and whether it happened",
+      "Finds who has gone quiet, and what to raise because of it",
+    ],
+    outputs: [["Trig", "One pack per call &mdash; 11 this week, ready Monday morning"]],
   },
   {
     match: /exec sponsor|sponsor.*renewal|renewal.*sponsor/i,
     name: "Confirm exec sponsor involvement before renewal",
-    steps: [
-      ["What it gets", "Accounts with a renewal date inside 90 days", "HubSpot"],
-      ["What it does to it", "Checks whether anyone with <strong>role equals Manager</strong> has replied in the last 60 days", "", true],
-      ["What it makes", "A list of accounts where nobody senior is involved", ""],
-      ["Where it goes", "Into Trig, the day the renewal comes into range", ""],
+    inputs: [
+      ["HubSpot", "Accounts with a renewal date inside 90 days"],
+      ["HubSpot", "Everyone at those accounts whose <strong>role says Manager</strong>", true],
     ],
-    note: "It has guessed that an exec sponsor is anyone whose CRM role says Manager. That is almost certainly not what you meant &mdash; change the line and it will read it again.",
+    actions: ["Checks whether any of them has replied in the last 60 days"],
+    outputs: [["Trig", "A list of accounts where nobody senior is involved"]],
+    note: "It has decided an exec sponsor is anyone whose CRM role says Manager. That is almost certainly not what you meant &mdash; say what it should look for and it will read it again.",
   },
   {
     match: /demo|follow.?up/i,
     name: "Draft a follow-up for every demo",
-    steps: [
-      ["What it gets", "Demos in their calendar this week, and the recording of each one", "Google Calendar, <em>Gong &mdash; not connected</em>", true],
-      ["What it does to it", "Pulls out what was asked, what was promised, and any objection raised", ""],
-      ["What it makes", "One follow-up email per demo, unsent", ""],
-      ["Where it goes", "Their Gmail drafts", ""],
+    inputs: [
+      ["Google Calendar", "Demos in their calendar this week"],
+      ["Gong", "The recording of each one", true],
     ],
-    note: "It needs Gong to hear the demos. Without it, this runs on calendar titles alone and the follow-ups will be generic.",
+    actions: [
+      "Pulls out what was asked, what was promised, and any objection raised",
+      "Writes a follow-up in their own voice, from the last five they sent",
+    ],
+    outputs: [["Gmail", "One draft per demo, unsent"]],
+    note: "Gong is not connected, so it cannot hear the demos. Without it this runs on calendar titles alone and the follow-ups will be generic.",
     fix: "Connect Gong",
   },
   {
     match: /summar\w+.*call|call.*summar|log every|crm up to date/i,
     name: "Summarise every call into the CRM",
-    steps: [
-      ["What it gets", "Each customer call the moment it ends", "Google Calendar, Gong &mdash; not connected", true],
-      ["What it does to it", "Writes a short summary, pulls out the next step and who owns it", ""],
-      ["What it makes", "One record per call", ""],
-      ["Where it goes", "Onto the account in HubSpot. Nobody reads it, which is the point", ""],
+    inputs: [["Gong", "Each customer call the moment it ends", true]],
+    actions: [
+      "Writes a short summary",
+      "Pulls out the next step and who owns it",
     ],
+    outputs: [["HubSpot", "One record on the account. Nobody reads it, which is the point"]],
     fix: "Connect Gong",
   },
   {
     match: /shop|dog|walk|dinner|laundry/i,
     name: "Weekly shop",
-    steps: [
-      ["What it gets", "Nothing. None of the tools it has hold a shopping list or a dog", "", true],
-      ["What it does to it", "&mdash;", "", true],
-      ["What it makes", "&mdash;", "", true],
-      ["Where it goes", "&mdash;", "", true],
-    ],
+    inputs: [["", "Nothing. None of the tools it has hold a shopping list or a dog", true]],
+    actions: [],
+    outputs: [],
     note: "Trig has HubSpot, Salesforce, a calendar, a mailbox and Slack. None of those will do this. Nothing stopped you asking &mdash; you can see it cannot, so bin it.",
     dead: true,
   },
@@ -138,27 +145,11 @@ const PLANS = [
 
 const FALLBACK = {
   name: "Your assignment",
-  steps: [
-    ["What it gets", "Accounts in their book, and activity on each", "HubSpot"],
-    ["What it does to it", "Reads what changed since the last run", "", true],
-    ["What it makes", "A short summary per account", "", true],
-    ["Where it goes", "Into Trig", ""],
-  ],
-  note: "It could not tell what this should look at, so it has guessed the broadest thing. If that is wrong, say what it should read.",
+  inputs: [["HubSpot", "Accounts in their book, and activity on each", true]],
+  actions: [["Reads what changed since the last run", true]],
+  outputs: [["Trig", "A short summary per account", true]],
+  note: "It could not tell what this should look at, so it has guessed the broadest thing. Say what it should read and it will try again.",
 };
-
-/* Each carries its own trigger, because two of these are conditions and
-   leaving them on a Monday schedule would misrepresent them. */
-/* Each carries its own trigger, because two of these are conditions and
-   leaving them on a weekly schedule would misrepresent them. */
-const EXAMPLES = [
-  ["Prep my 1:1s each week", { kind: "schedule", every: 1, unit: "weeks" }],
-  ["Confirm exec sponsor involvement before renewal",
-   { kind: "condition", attr: "Days until renewal", op: "lte", val: "90" }],
-  ["Draft a follow-up for every demo I did this week", { kind: "schedule", every: 1, unit: "weeks" }],
-  ["Summarise every call into the CRM", { kind: "condition", attr: "Deal stage", op: "eq", val: "Negotiation" }],
-  ["Will you do my weekly shop and walk my dog", { kind: "schedule", every: 1, unit: "weeks" }],
-];
 
 const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
 
@@ -254,21 +245,22 @@ const form = () => `
 
 /* ------------------------------------------------------------ the plan */
 
-const steps = (p) =>
-  p.steps
-    .map(
-      ([title, body, via, wrong], i) => `
-      <div class="bd-step${wrong ? " wrong" : ""}">
-        <span class="bd-n">${i + 1}</span>
-        <span class="bd-body">
-          <span class="bd-label">${title}</span>
-          <span class="bd-value">${body}</span>
-          ${via ? `<span class="bd-note">${via}</span>` : ""}
-        </span>
-        <span class="bd-change"><button class="btn sm" type="button" data-bd-edit>Change</button></span>
-      </div>`,
-    )
-    .join("");
+const isOn = (t) => (TOOLS.find(([n]) => n === t) ?? [, false])[1];
+const asRow = (r) => (Array.isArray(r) ? [null, r[0], r[1]] : [null, r]);
+
+/* One line of the plan. The tool has its own column so every line in a group
+   starts at the same x, and an action with no tool reads as a deliberate gap
+   rather than a missing word. */
+const line = ([tool, text, wrong]) => `
+  <div class="pl-line${wrong ? " wrong" : ""}">
+    <span class="pl-tool">${
+      tool ? `<span class="bd-tool${isOn(tool) ? "" : " off"}">${tool}</span>` : ""
+    }</span>
+    <span class="pl-text">${text}</span>
+  </div>`;
+
+const group = (title, rows, extra = "") =>
+  rows.length ? `<h3>${title}</h3>${rows.map(line).join("")}${extra}` : "";
 
 const planned = (p, text) => `
   <header>
@@ -279,16 +271,11 @@ const planned = (p, text) => `
     ${CLOSE}
   </header>
   <div class="drawer-body">
-    <p class="bd-said">&ldquo;${text}&rdquo;</p>
+    <p class="bd-echo">&ldquo;${text}&rdquo;</p>
 
-    <h3>With the tools it has</h3>
-    <div class="bd-tools">
-      ${TOOLS.map(([t, on]) => `<span class="bd-tool${on ? "" : " off"}">${t}</span>`).join("")}
-      <button class="btn sm" type="button" data-bd-edit>Add a tool</button>
-    </div>
-
-    <h3>Here's what it will do</h3>
-    ${steps(p)}
+    ${group("Inputs we'll use", p.inputs, `<div class="pl-add"><button class="btn sm" type="button" data-bd-edit>Add a tool</button></div>`)}
+    ${group("Actions we'll apply", p.actions.map(asRow))}
+    ${group("Outputs we'll produce", p.outputs)}
     ${p.note ? `<p class="bd-said warn">${p.note}</p>` : ""}
 
     <div class="canvas-actions">
