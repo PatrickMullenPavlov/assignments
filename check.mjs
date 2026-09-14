@@ -86,6 +86,29 @@ for (const k of Object.keys(LOGS)) if (!/data-close/.test(CANVAS.log(k))) wrong.
 console.log(wrong.length ? "WRONG SURFACE: " + wrong.join(", ")
   : "ok: no pane renders drawer chrome, and every drawer can be closed");
 
+/* The modules that touch a DOM were invisible here: importing one throws
+   without a document, so a ReferenceError inside a template survived two
+   commits while every other check passed. Load them under a stub and fire
+   the one click that matters. */
+const dom = await import("/Users/patrick/Desktop/trig-prototype/dom.mjs");
+let builderErr = null;
+try {
+  await import("/Users/patrick/Desktop/trig-prototype/builder.js");
+} catch (e) {
+  builderErr = e;
+}
+if (builderErr) {
+  console.log("BUILDER WILL NOT LOAD: " + builderErr.message);
+} else {
+  const threw = dom.click("[data-add-assignment]");
+  const html = dom.drawerHTML();
+  console.log(
+    threw ? "ADD AN ASSIGNMENT THROWS: " + threw.message
+      : html.length < 400 ? `ADD AN ASSIGNMENT OPENS NOTHING (${html.length} chars)`
+      : `ok: Add an Assignment opens a drawer, ${html.length} chars, ${dom.counts().click} handlers`,
+  );
+}
+
 /* Every data-* hook a row is given must be one a handler listens for.
    Rendering proves nothing about this: a row can carry data-name forever
    while every handler reads data-pick, and it just quietly stops opening. */

@@ -151,6 +151,17 @@ const FALLBACK = {
   note: "It could not tell what this should look at, so it has guessed the broadest thing. Say what it should read and it will try again.",
 };
 
+/* Each carries its own trigger, because two of these are conditions and
+   leaving them on a weekly schedule would misrepresent them. */
+const EXAMPLES = [
+  ["Prep my 1:1s each week", { kind: "schedule", every: 1, unit: "weeks" }],
+  ["Confirm exec sponsor involvement before renewal",
+   { kind: "condition", attr: "Days until renewal", op: "lte", val: "90" }],
+  ["Draft a follow-up for every demo I did this week", { kind: "schedule", every: 1, unit: "weeks" }],
+  ["Summarise every call into the CRM", { kind: "condition", attr: "Deal stage", op: "eq", val: "Negotiation" }],
+  ["Will you do my weekly shop and walk my dog", { kind: "schedule", every: 1, unit: "weeks" }],
+];
+
 const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
 
 /* ------------------------------------------------------------ the form */
