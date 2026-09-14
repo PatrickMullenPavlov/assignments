@@ -1233,6 +1233,10 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .bd-hint { margin: 9px 0 0; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
 
 .bd-who, .bd-eg { display: flex; flex-wrap: wrap; gap: 7px; }
+/* The examples sit between the prompt and the button, because they are how
+   most people will start and putting them after the call to action means
+   finding them only once you have already committed. */
+.bd-eg { margin-top: 14px; }
 .bd-chip {
   border: 1px solid var(--rule); background: var(--panel2); border-radius: var(--r-pill);
   padding: 6px 12px; font: inherit; font-size: var(--t-xs); color: var(--ink-2);
@@ -1304,28 +1308,26 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .bd-v-t { margin: 0 0 6px; font-size: var(--t-md); font-weight: 500; }
 .bd-v-a { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
 
-/* schedule or condition: the choice comes before its values */
-.bd-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-.bd-kind {
-  display: flex; flex-direction: column; gap: 3px; text-align: left;
-  border: 1px solid var(--rule); background: var(--white); border-radius: var(--r-md);
-  padding: 11px 13px; font: inherit; font-size: var(--t-sm); color: var(--ink); cursor: pointer;
+/* Schedule or condition. A binary, so a segmented control rather than two
+   panels — the choice is small and the settings under it are the content. */
+.bd-seg {
+  display: inline-flex; background: var(--panel2); border: 1px solid var(--rule);
+  border-radius: var(--r-md); padding: 2px; gap: 2px; margin-bottom: 12px; max-width: 100%;
 }
-.bd-kind em { font-style: normal; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
-.bd-kind:hover { box-shadow: var(--shadow-nav); }
-.bd-kind.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.bd-kind.on em { color: var(--ink-2); }
-@media (max-width: 560px) { .bd-kinds { grid-template-columns: 1fr; } }
+.bd-segment {
+  border: 0; background: none; border-radius: 6px; padding: 7px 13px;
+  font: inherit; font-size: var(--t-sm); color: var(--ink-2); cursor: pointer; white-space: nowrap;
+}
+.bd-segment:hover { color: var(--ink); }
+.bd-segment.on { background: var(--white); color: var(--ink); box-shadow: var(--shadow-nav); }
 
-/* the app's own schedule and condition controls: Every n unit, or
-   attribute / operator / value */
 .bd-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .bd-word { font-size: var(--t-sm); color: var(--ink-2); }
 .bd-num, .bd-sel {
   height: 36px; padding: 0 10px; font: inherit; font-size: var(--t-sm); color: var(--ink);
   background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
 }
-.bd-num { width: 76px; }
+.bd-num { width: 72px; }
 .bd-sel { padding-right: 28px; }
 .bd-sel.wide { flex: 1 1 190px; min-width: 0; }
 .bd-num:focus, .bd-sel:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1); }

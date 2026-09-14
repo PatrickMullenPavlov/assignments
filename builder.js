@@ -200,6 +200,9 @@ const triggerLabel = () => {
     : `When ${trigger.attr.toLowerCase()} is ${op} ${trigger.val}`;
 };
 
+/* "Every 1 days" is wrong, and the unit is the only place to fix it. */
+const unitLabel = (u, n) => (n === 1 ? u.replace(/s$/, "") : u);
+
 const form = () => `
   <header>
     <div>
@@ -215,16 +218,14 @@ const form = () => `
         (r) => `<button class="bd-chip${picked.has(r) ? " on" : ""}" type="button" data-bd-who="${r}">${r}</button>`,
       ).join("")}
     </div>
-    <p class="bd-hint">One unit of work, however many people it runs for. Each gets it against their own book.</p>
+    <p class="bd-hint">One unit of work, however many people it runs for. Each against their own book.</p>
 
     <h3>When it runs</h3>
-    <div class="bd-kinds">
-      <button class="bd-kind${trigger.kind === "schedule" ? " on" : ""}" type="button" data-bd-kind="schedule">
-        On a schedule<em>Runs whether or not anything changed</em>
-      </button>
-      <button class="bd-kind${trigger.kind === "condition" ? " on" : ""}" type="button" data-bd-kind="condition">
-        When something becomes true<em>Silent until it does</em>
-      </button>
+    <div class="bd-seg" role="group">
+      <button class="bd-segment${trigger.kind === "schedule" ? " on" : ""}" type="button" data-bd-kind="schedule"
+        aria-pressed="${trigger.kind === "schedule"}">On a schedule</button>
+      <button class="bd-segment${trigger.kind === "condition" ? " on" : ""}" type="button" data-bd-kind="condition"
+        aria-pressed="${trigger.kind === "condition"}">When something changes</button>
     </div>
     ${
       trigger.kind === "schedule"
@@ -232,9 +233,12 @@ const form = () => `
              <span class="bd-word">Every</span>
              <input class="bd-num" type="number" min="1" value="${trigger.every}" data-bd-every aria-label="How often">
              <select class="bd-sel" data-bd-unit aria-label="Unit">
-               ${UNITS.map((u) => `<option${u === trigger.unit ? " selected" : ""}>${u}</option>`).join("")}
+               ${UNITS.map(
+                 (u) => `<option value="${u}"${u === trigger.unit ? " selected" : ""}>${unitLabel(u, trigger.every)}</option>`,
+               ).join("")}
              </select>
-           </div>`
+           </div>
+           <p class="bd-hint">Runs whether or not anything changed.</p>`
         : `<div class="bd-row">
              <select class="bd-sel wide" data-bd-attr aria-label="What to watch">
                ${ATTRS.map(([a]) => `<option${a === trigger.attr ? " selected" : ""}>${a}</option>`).join("")}
@@ -243,21 +247,21 @@ const form = () => `
                ${OPS.map(([k, l]) => `<option value="${k}"${k === trigger.op ? " selected" : ""}>${l}</option>`).join("")}
              </select>
              ${UNARY.includes(trigger.op) ? "" : `<input class="bd-num" value="${trigger.val}" data-bd-val aria-label="Value">`}
-           </div>`
+           </div>
+           <p class="bd-hint">Silent until it does. Checked every morning.</p>`
     }
 
     <h3>What it does</h3>
-    <textarea class="bd-input" name="ask" rows="3"
-      placeholder="Prep my 1:1s each week&#10;&#10;Say where you want it to land too &mdash; in Trig, in Slack, as a draft.">${prompt}</textarea>
-    <p class="bd-hint">Plain English. Trig will show you what it understood before anything runs.</p>
+    <textarea class="bd-input" name="ask" rows="2"
+      placeholder="Prep my 1:1s each week">${prompt}</textarea>
+    <p class="bd-hint">Plain English. Say where you want it to land too &mdash; in Trig, in Slack, as a draft.</p>
+
+    <div class="bd-eg">
+      ${EXAMPLES.map(([x], i) => `<button class="bd-chip" type="button" data-bd-eg="${i}">${x}</button>`).join("")}
+    </div>
 
     <div class="canvas-actions">
       <button class="btn primary" type="button" data-bd-plan>Plan it out</button>
-    </div>
-
-    <h3>Or start from one of these</h3>
-    <div class="bd-eg">
-      ${EXAMPLES.map(([x], i) => `<button class="bd-chip" type="button" data-bd-eg="${i}">${x}</button>`).join("")}
     </div>
   </div>`;
 
