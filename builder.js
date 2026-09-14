@@ -1,300 +1,293 @@
-/* The assignment builder.
+/* The assignment builder, as agreed on 14 September.
 
-   In the drawer, not in the page. Creating something should not destroy your
-   view of what already exists — the list stays behind it, and closing puts
-   you back exactly where you were.
+   Three fields and a prompt, then a plan you can disagree with. In the
+   drawer, so the list you already have stays behind it.
 
-   One question, then a brief you correct. Not a form: scope falls out of who
-   it's for, when it runs and what it's about, so asking for a cohort up front
-   asks for something Trig can usually work out.
+   Two rules from that conversation shape everything here:
 
-   Four shapes, all reachable from the examples:
+   It never asks a follow-up question. Presented with "confirm exec sponsor
+   involvement before renewal" it does not ask what a sponsor is or where
+   that lives — it shows the conclusion it drew, however wrong, and lets a
+   person say "I can see how you got there, but it's not that".
 
-     runnable        it has what it needs and says so
-     needs a set     "lapsed" can't be derived, so it asks — the only time
-                     the cohort question appears
-     needs a marker  "at risk" isn't checkable until someone says what to
-                     look for; Trig proposes and lets you cut
-     a question      answerable, but nobody would set it up as a job       */
+   It never gates a silly prompt. Ask it to walk your dog and it will tell
+   you, with the tools it has, what it would do. You reject it. Nobody
+   needs protecting from typing the wrong thing; they need to see what it
+   understood before anything runs.
+
+   So several of the plans below come back visibly wrong on purpose. A
+   builder whose every guess is right would demonstrate the opposite of
+   what was decided.                                                       */
 
 import { showDrawer, drawerEl } from "./drawer.js";
+import { REPS } from "./filter.js";
 
 const CLOSE = `<button class="icon-btn" type="button" data-close aria-label="Close">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
   </button>`;
 
-/* What Trig understood. Canned, because this is a prototype — but the shape
-   is the real one: every line is a statement it can be wrong about. */
-const READS = [
+const CADENCES = [
+  "Every weekday, 6:40 am",
+  "Every Monday, 6:40 am",
+  "Every Tuesday",
+  "Every morning",
+  "Continuously",
+];
+
+/* What Trig can reach. Shown up front, because the alternative is finding
+   out at run time that Gong was never connected. */
+const TOOLS = [
+  ["HubSpot", true], ["Salesforce", true], ["Google Calendar", true],
+  ["Gmail", true], ["Slack", true], ["Gong", false], ["Zoom", false],
+];
+
+/* Four steps: what it gets, what it does to it, what it makes, where it
+   goes. `wrong` marks a step the interpretation got wrong — the thing a
+   person is here to catch. */
+const PLANS = [
   {
-    match: /1:1|one to one|prep.*call|call.*prep/i,
+    match: /1:1|one to one|prep.*call|call.*prep|prep.*1:1/i,
     name: "Prep my 1:1s",
-    verdict: "runnable",
-    lines: [
-      ["Who it's for", "You", "Your book, your calendar"],
-      ["When it runs", "Every Monday, 6:40 am", "Before the week starts"],
-      ["What it's about", "Each call", "11 this week, from your calendar"],
-      ["What it does", "Builds a pack", "What moved, what you promised, what to raise"],
-      ["Where it lands", "In Trig", "Read only — it changes nothing"],
-    ],
-    after: "One pack per call, so two calls with the same account this week are two packs.",
-  },
-  {
-    match: /champion|quiet|gone (quiet|dark)/i,
-    name: "Chase quiet champions",
-    verdict: "runnable",
-    lines: [
-      ["Who it's for", "You", "The champions on your accounts"],
-      ["When it runs", "When someone goes quiet for 30 days", "Checked every morning"],
-      ["What it's about", "Each person", "18 champions today"],
-      ["What it does", "Drafts a note, then stops when they reply", "Never more than one chase a fortnight"],
-      ["Where it lands", "A draft for you", "Trig writes it. You send it"],
-    ],
-    after: "Silent most days. When it finds nothing it will still say so, and show you what it checked.",
-  },
-  {
-    match: /proposal|pricing|negotiat/i,
-    name: "Draft proposals against our pricing",
-    verdict: "runnable",
-    lines: [
-      ["Who it's for", "You", "Your deals"],
-      ["When it runs", "The moment a deal reaches Negotiation", "Not on a timetable"],
-      ["What it's about", "Each deal", "One document per deal, not per account"],
-      ["What it does", "Writes the proposal, checked against your pricing", "Flags anything outside the discount cap"],
-      ["Where it lands", "A draft for you", "Trig writes it. You send it"],
-    ],
-    after: "It reads your pricing document. If that changes, say so — it will not notice on its own.",
-  },
-  {
-    match: /win ?back|lapsed|trial/i,
-    name: "Win back lapsed trials",
-    verdict: "needs-a-set",
-    ask: "Which trials count as lapsed?",
-    askWhy:
-      "The one thing Trig can't work out. Your book and the cadence give it everything else, but nobody has said what lapsed means.",
-    options: [
-      "Trial ended, no purchase, within the last 6 months",
-      "Trial ended, no purchase, ever",
-      "Signed up, never activated",
-    ],
-    lines: [
-      ["Who it's for", "You", "Your book"],
-      ["When it runs", "Every Tuesday", ""],
-      ["What it's about", "Each account", "One sequence per account"],
-      ["What it does", "Sends three steps, stopping when they reply", "Step 3 needs you — it holds a discount"],
-      ["Where it lands", "A draft for you", "Trig writes it. You send it"],
+    steps: [
+      ["What it gets", "Every customer call in their calendar for the coming week, and the account behind each one", "Google Calendar, HubSpot"],
+      ["What it does to it", "Reads what moved since they last spoke, what was promised, and who has gone quiet", ""],
+      ["What it makes", "One pack per call &mdash; 11 this week", ""],
+      ["Where it goes", "Into Trig, ready on Monday morning", ""],
     ],
   },
   {
-    match: /at risk|worry|churn(ing)? risk|won'?t close|wasting time/i,
-    name: "",
-    verdict: "needs-a-marker",
-    ask: "What would tell you an account is at risk?",
-    askWhy:
-      "Risk isn't something Trig can check for. Name what you'd look at and it becomes a job it can run every morning.",
-    proposed: [
-      ["Usage falling below its normal band", true],
-      ["The last admin leaving", true],
-      ["No reply from anyone in 30 days", true],
-      ["A renewal inside 90 days with no exec sponsor", false],
-      ["Support tickets doubling month on month", false],
+    match: /exec sponsor|sponsor.*renewal|renewal.*sponsor/i,
+    name: "Confirm exec sponsor involvement before renewal",
+    steps: [
+      ["What it gets", "Accounts with a renewal date inside 90 days", "HubSpot"],
+      ["What it does to it", "Checks whether anyone with <strong>role equals Manager</strong> has replied in the last 60 days", "", true],
+      ["What it makes", "A list of accounts where nobody senior is involved", ""],
+      ["Where it goes", "Into Trig, every Monday", ""],
     ],
+    note: "It has guessed that an exec sponsor is anyone whose CRM role says Manager. That is almost certainly not what you meant &mdash; change the line and it will read it again.",
   },
   {
-    match: /hit the number|forecast|how many|which of my accounts (grew|have)/i,
-    name: "",
-    verdict: "a-question",
-    answer:
-      "You're £340k against a £400k quarter with 3 weeks left. £96k is in Negotiation and £210k in Proposal. Two deals slipped past the quarter this week.",
-    why: "This is a question, not a job. You want the answer now, not every Monday whether you want it or not.",
+    match: /demo|follow.?up/i,
+    name: "Draft a follow-up for every demo",
+    steps: [
+      ["What it gets", "Demos in their calendar this week, and the recording of each one", "Google Calendar, <em>Gong &mdash; not connected</em>", true],
+      ["What it does to it", "Pulls out what was asked, what was promised, and any objection raised", ""],
+      ["What it makes", "One follow-up email per demo, unsent", ""],
+      ["Where it goes", "Their Gmail drafts", ""],
+    ],
+    note: "It needs Gong to hear the demos. Without it, this runs on calendar titles alone and the follow-ups will be generic.",
+    fix: "Connect Gong",
+  },
+  {
+    match: /summar\w+.*call|call.*summar|log every|crm up to date/i,
+    name: "Summarise every call into the CRM",
+    steps: [
+      ["What it gets", "Every customer call as it finishes", "Google Calendar, Gong &mdash; not connected", true],
+      ["What it does to it", "Writes a short summary, pulls out the next step and who owns it", ""],
+      ["What it makes", "One record per call", ""],
+      ["Where it goes", "Onto the account in HubSpot. Nobody reads it, which is the point", ""],
+    ],
+    fix: "Connect Gong",
+  },
+  {
+    match: /shop|dog|walk|dinner|laundry/i,
+    name: "Weekly shop",
+    steps: [
+      ["What it gets", "Nothing. None of the tools it has hold a shopping list or a dog", "", true],
+      ["What it does to it", "&mdash;", "", true],
+      ["What it makes", "&mdash;", "", true],
+      ["Where it goes", "&mdash;", "", true],
+    ],
+    note: "Trig has HubSpot, Salesforce, a calendar, a mailbox and Slack. None of those will do this. Nothing stopped you asking &mdash; you can see it cannot, so bin it.",
+    dead: true,
   },
 ];
 
 const FALLBACK = {
-  verdict: "unclear",
-  ask: "What should Trig look at?",
-  askWhy:
-    "Trig couldn't tell what this would run over. Say what it should check and how often, and it will read it back.",
+  name: "Your assignment",
+  steps: [
+    ["What it gets", "Accounts in their book, and activity on each", "HubSpot"],
+    ["What it does to it", "Reads what changed since the last run", "", true],
+    ["What it makes", "A short summary per account", "", true],
+    ["Where it goes", "Into Trig", ""],
+  ],
+  note: "It could not tell what this should look at, so it has guessed the broadest thing. If that is wrong, say what it should read.",
 };
 
 const EXAMPLES = [
-  "Prep me for my 1:1s each week",
-  "Tell me when a champion goes quiet",
-  "Draft a proposal when a deal reaches negotiation",
-  "Win back our lapsed trials",
-  "Tell me which accounts are at risk",
-  "Are we going to hit the number this quarter?",
+  "Prep my 1:1s each week",
+  "Confirm exec sponsor involvement before renewal",
+  "Draft a follow-up for every demo I did this week",
+  "Summarise every call into the CRM",
+  "Will you do my weekly shop and walk my dog",
 ];
 
-const read = (text) => READS.find((r) => r.match.test(text)) ?? FALLBACK;
+const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
 
-const lineRows = (lines) =>
-  lines
+/* ------------------------------------------------------------ the form */
+
+let picked = new Set([REPS[4]]);
+let cadence = CADENCES[1];
+let prompt = "";
+
+const form = () => `
+  <header>
+    <div>
+      <h2>Add an assignment</h2>
+      <p>A unit of work, repeated. Say what you want done and Trig plans it out.</p>
+    </div>
+    ${CLOSE}
+  </header>
+  <div class="drawer-body">
+    <h3>Who it's for</h3>
+    <div class="bd-who">
+      ${REPS.map(
+        (r) => `<button class="bd-chip${picked.has(r) ? " on" : ""}" type="button" data-bd-who="${r}">${r}</button>`,
+      ).join("")}
+    </div>
+    <p class="bd-hint">One unit of work, however many people it runs for. Each gets it against their own book.</p>
+
+    <h3>When it runs</h3>
+    <div class="bd-who">
+      ${CADENCES.map(
+        (c) => `<button class="bd-chip${c === cadence ? " on" : ""}" type="button" data-bd-when="${c}">${c}</button>`,
+      ).join("")}
+    </div>
+
+    <h3>What it does</h3>
+    <textarea class="bd-input" name="ask" rows="3"
+      placeholder="Prep my 1:1s each week&#10;&#10;Say where you want it to land too &mdash; in Trig, in Slack, as a draft.">${prompt}</textarea>
+    <p class="bd-hint">Plain English. Trig will show you what it understood before anything runs.</p>
+
+    <div class="canvas-actions">
+      <button class="btn primary" type="button" data-bd-plan>Plan it out</button>
+    </div>
+
+    <h3>Or start from one of these</h3>
+    <div class="bd-eg">
+      ${EXAMPLES.map((x) => `<button class="bd-chip" type="button" data-bd-eg="${x}">${x}</button>`).join("")}
+    </div>
+  </div>`;
+
+/* ------------------------------------------------------------ the plan */
+
+const steps = (p) =>
+  p.steps
     .map(
-      ([label, value, note]) => `
-      <div class="bd-line">
-        <span class="bd-label">${label}</span>
+      ([title, body, via, wrong], i) => `
+      <div class="bd-step${wrong ? " wrong" : ""}">
+        <span class="bd-n">${i + 1}</span>
         <span class="bd-body">
-          <span class="bd-value">${value}</span>
-          ${note ? `<span class="bd-note">${note}</span>` : ""}
+          <span class="bd-label">${title}</span>
+          <span class="bd-value">${body}</span>
+          ${via ? `<span class="bd-note">${via}</span>` : ""}
         </span>
-        <span class="bd-change"><button class="btn sm" type="button" data-bd-change>Change</button></span>
+        <span class="bd-change"><button class="btn sm" type="button" data-bd-edit>Change</button></span>
       </div>`,
     )
     .join("");
 
-function ask(text) {
-  return `
-    <header>
-      <div>
-        <h2>Add an assignment</h2>
-        <p>Say what you want Trig to do. It reads it back before anything runs.</p>
-      </div>
-      ${CLOSE}
-    </header>
-    <div class="drawer-body">
-      <form class="bd-ask">
-        <input class="bd-input" name="ask" autocomplete="off" placeholder="Prep me for my 1:1s each week"
-               value="${text ?? ""}" aria-label="What do you want Trig to do?">
-        <button class="btn primary" type="submit">Read it back</button>
-      </form>
-      <p class="bd-hint">Say it the way you would to a colleague.</p>
-      <h3>Or start from one of these</h3>
-      <div class="bd-eg">
-        ${EXAMPLES.map((x) => `<button class="bd-chip" type="button" data-bd-eg="${x}">${x}</button>`).join("")}
-      </div>
-    </div>`;
-}
+const planned = (p, text) => `
+  <header>
+    <div>
+      <p class="drawer-kind">${cadence} &middot; for ${[...picked].join(", ") || "nobody yet"}</p>
+      <h2>${p.name}</h2>
+    </div>
+    ${CLOSE}
+  </header>
+  <div class="drawer-body">
+    <p class="bd-said">&ldquo;${text}&rdquo;</p>
 
-function brief(r, text) {
-  const head = `
-    <header>
-      <div>
-        <p class="drawer-kind">You asked for</p>
-        <h2>${text}</h2>
-      </div>
-      ${CLOSE}
-    </header>`;
+    <h3>With the tools it has</h3>
+    <div class="bd-tools">
+      ${TOOLS.map(([t, on]) => `<span class="bd-tool${on ? "" : " off"}">${t}</span>`).join("")}
+      <button class="btn sm" type="button" data-bd-edit>Add a tool</button>
+    </div>
 
-  if (r.verdict === "a-question") {
-    return `${head}
-      <div class="drawer-body">
-        <div class="bd-verdict q">
-          <p class="bd-v-t">That's a question, so here's the answer</p>
-          <p class="bd-v-a">${r.answer}</p>
-        </div>
-        <p class="rn-p">${r.why}</p>
-        <div class="canvas-actions">
-          <button class="btn" type="button" data-bd-back>Ask something else</button>
-        </div>
-      </div>`;
-  }
+    <h3>Here's what it will do</h3>
+    ${steps(p)}
+    ${p.note ? `<p class="bd-said warn">${p.note}</p>` : ""}
 
-  if (r.verdict === "needs-a-marker" || r.verdict === "unclear") {
-    return `${head}
-      <div class="drawer-body">
-        <div class="bd-verdict ask">
-          <p class="bd-v-t">${r.ask}</p>
-          <p class="bd-v-a">${r.askWhy}</p>
-        </div>
-        ${
-          r.proposed
-            ? `<h3>What Trig can already see. Cut anything you disagree with</h3>
-               ${r.proposed
-                 .map(
-                   ([m, on]) =>
-                     `<label class="bd-mark"><input type="checkbox" ${on ? "checked" : ""}><span>${m}</span></label>`,
-                 )
-                 .join("")}
-               <div class="canvas-actions">
-                 <button class="btn primary" type="button" data-bd-eg="Tell me when a champion goes quiet">Use these</button>
-                 <button class="btn" type="button" data-bd-back>Start again</button>
-               </div>`
-            : `<div class="canvas-actions"><button class="btn" type="button" data-bd-back>Start again</button></div>`
-        }
-      </div>`;
-  }
-
-  const needsSet = r.verdict === "needs-a-set";
-  return `${head}
-    <div class="drawer-body">
+    <div class="canvas-actions">
       ${
-        needsSet
-          ? `<div class="bd-verdict ask">
-               <p class="bd-v-t">${r.ask}</p>
-               <p class="bd-v-a">${r.askWhy}</p>
-               <div class="bd-opts">
-                 ${r.options
-                   .map(
-                     (o, i) =>
-                       `<label class="bd-opt"><input type="radio" name="set" ${i === 0 ? "checked" : ""}><span>${o}</span></label>`,
-                   )
-                   .join("")}
-               </div>
-             </div>`
-          : `<p class="bd-ok">Trig has everything it needs. Nothing runs until you say so.</p>`
+        p.dead
+          ? `<button class="btn" type="button" data-bd-back>Bin it and start again</button>`
+          : `<button class="btn primary" type="button" data-bd-accept="${p.name}">Start running it</button>
+             ${p.fix ? `<button class="btn" type="button" data-bd-edit>${p.fix}</button>` : ""}
+             <button class="btn" type="button" data-bd-back>Change the prompt</button>`
       }
+    </div>
+  </div>`;
 
-      <h3>What it will do</h3>
-      ${lineRows(r.lines)}
-      ${r.after ? `<p class="canvas-after">${r.after}</p>` : ""}
+const running = (name) => `
+  <header>
+    <div><h2>${name} is running</h2></div>
+    ${CLOSE}
+  </header>
+  <div class="drawer-body">
+    <div class="bd-verdict ok">
+      <p class="bd-v-t">${cadence}, for ${[...picked].join(", ")}</p>
+      <p class="bd-v-a">It will appear in the list either way &mdash; if it finds nothing, it says so and shows you what it checked.</p>
+    </div>
+    <div class="canvas-actions">
+      <button class="btn primary" type="button" data-close>Back to assignments</button>
+      <button class="btn" type="button" data-bd-back>Add another</button>
+    </div>
+  </div>`;
 
-      <h3>How you'll know it's working</h3>
-      <p class="rn-p">Trig will tell you whether it ran, and whether you read what it made. It can't tell you whether it worked — that needs a group left alone to compare against, and we don't do that yet.</p>
+/* --------------------------------------------------------------- wiring */
 
-      <div class="canvas-actions">
-        <button class="btn primary" type="button" data-bd-accept="${r.name}">Start running it</button>
-        <button class="btn" type="button" data-bd-back>Start again</button>
-      </div>
-    </div>`;
-}
-
-function done(name) {
-  return `
-    <header>
-      <div><h2>${name} is running</h2></div>
-      ${CLOSE}
-    </header>
-    <div class="drawer-body">
-      <div class="bd-verdict ok">
-        <p class="bd-v-t">First run Monday at 6:40 am</p>
-        <p class="bd-v-a">It will appear in your list either way — if it finds nothing, it will say so and show you what it checked.</p>
-      </div>
-      <div class="canvas-actions">
-        <button class="btn primary" type="button" data-close>Back to assignments</button>
-        <button class="btn" type="button" data-bd-back>Add another</button>
-      </div>
-    </div>`;
-}
-
-function open(text) {
-  showDrawer(text == null ? ask() : brief(read(text), text));
+const openForm = () => {
+  showDrawer(form());
   drawerEl.querySelector(".bd-input")?.focus();
-}
+};
+
+const openPlan = (text) => {
+  prompt = text;
+  showDrawer(planned(plan(text), text));
+};
+
+const typed = () => (drawerEl.querySelector('[name="ask"]')?.value ?? "").trim();
 
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-add-assignment]")) {
     e.preventDefault();
-    return open(null);
+    prompt = "";
+    return openForm();
   }
   if (!drawerEl.contains(e.target)) return;
 
-  const eg = e.target.closest("[data-bd-eg]");
-  if (eg) return open(eg.dataset.bdEg);
+  const who = e.target.closest("[data-bd-who]");
+  if (who) {
+    const r = who.dataset.bdWho;
+    picked.has(r) ? picked.delete(r) : picked.add(r);
+    prompt = typed();
+    return openForm();
+  }
 
-  if (e.target.closest("[data-bd-back]")) return open(null);
+  const when = e.target.closest("[data-bd-when]");
+  if (when) {
+    cadence = when.dataset.bdWhen;
+    prompt = typed();
+    return openForm();
+  }
+
+  const eg = e.target.closest("[data-bd-eg]");
+  if (eg) return openPlan(eg.dataset.bdEg);
+
+  if (e.target.closest("[data-bd-plan]")) {
+    const v = typed();
+    return v ? openPlan(v) : drawerEl.querySelector(".bd-input")?.focus();
+  }
+
+  if (e.target.closest("[data-bd-back]")) return openForm();
 
   const accept = e.target.closest("[data-bd-accept]");
-  if (accept) return showDrawer(done(accept.dataset.bdAccept || "Your assignment"));
+  if (accept) return showDrawer(running(accept.dataset.bdAccept));
 
-  // Correcting a line is the open design question: retype in the same words
-  // you asked in, or be given a control. This only shows where it would go.
-  const change = e.target.closest("[data-bd-change]");
-  if (change) change.closest(".bd-line").classList.toggle("editing");
-});
-
-drawerEl.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const v = new FormData(e.target).get("ask").trim();
-  if (v) open(v);
+  /* Correcting a line means saying it again in your own words, which runs
+     the interpretation afresh. Davy called that half a step from a chat
+     interface, and he is right — it is the open question here. */
+  const edit = e.target.closest("[data-bd-edit]");
+  if (edit) return openForm();
 });
