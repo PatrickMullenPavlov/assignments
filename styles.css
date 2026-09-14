@@ -1295,3 +1295,16 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .bd-kind.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .bd-kind.on em { color: var(--ink-2); }
 @media (max-width: 560px) { .bd-kinds { grid-template-columns: 1fr; } }
+
+/* the app's own schedule and condition controls: Every n unit, or
+   attribute / operator / value */
+.bd-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bd-word { font-size: var(--t-sm); color: var(--ink-2); }
+.bd-num, .bd-sel {
+  height: 36px; padding: 0 10px; font: inherit; font-size: var(--t-sm); color: var(--ink);
+  background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
+}
+.bd-num { width: 76px; }
+.bd-sel { padding-right: 28px; }
+.bd-sel.wide { flex: 1 1 190px; min-width: 0; }
+.bd-num:focus, .bd-sel:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1); }

@@ -31,22 +31,41 @@ const CLOSE = `<button class="icon-btn" type="button" data-close aria-label="Clo
    is a second distinction — a moment (a call ends, fires once and is over)
    against a state (nobody has replied in 30 days, which stays true) — but
    that one matters to the engine, not to the person setting it up, so it is
-   not a choice here. */
-const CADENCES = [
-  "Every weekday, 6:40 am",
-  "Every Monday, 6:40 am",
-  "Every Tuesday",
-  "Every morning",
-  "Continuously",
+   not a choice here.
+
+   Both borrow the app's own vocabulary rather than inventing one.
+
+   The schedule is RecurringTasksEditor: the word "Every", a number, and a
+   unit. That is the only schedule editor the app has — CRON exists in
+   AgentAutomation.schedule_type but nothing creates one, ScheduleLabel only
+   renders it.
+
+   The condition is criteria-filter-future: an attribute, an operator and a
+   value, with the operator labels the app already uses. It is the same
+   component behind the assignment's org_filter. */
+const UNITS = ["hours", "days", "weeks"];
+
+const ATTRS = [
+  ["Days since anyone replied", "number", "30"],
+  ["Days until renewal", "number", "90"],
+  ["Seats in use", "percent", "90"],
+  ["Weekly active users", "number", "18"],
+  ["Deal stage", "text", "Negotiation"],
+  ["Admins with a login", "number", "1"],
 ];
 
-const CONDITIONS = [
-  "A renewal comes inside 90 days",
-  "A deal reaches Negotiation",
-  "A call ends",
-  "Nobody has replied in 30 days",
-  "Seats pass 90%",
+/* Straight from criteria-filter-future's operatorSymbolMap. */
+const OPS = [
+  ["gte", "greater than or equal to"],
+  ["gt", "greater than"],
+  ["lte", "less than or equal to"],
+  ["lt", "less than"],
+  ["eq", "equal to"],
+  ["ne", "not equal to"],
+  ["is_null", "has no value"],
+  ["is_not_null", "has any value"],
 ];
+const UNARY = ["is_null", "is_not_null"];
 
 /* What Trig can reach. Shown up front, because the alternative is finding
    out at run time that Gong was never connected. */
@@ -130,12 +149,15 @@ const FALLBACK = {
 
 /* Each carries its own trigger, because two of these are conditions and
    leaving them on a Monday schedule would misrepresent them. */
+/* Each carries its own trigger, because two of these are conditions and
+   leaving them on a weekly schedule would misrepresent them. */
 const EXAMPLES = [
-  ["Prep my 1:1s each week", "schedule", CADENCES[1]],
-  ["Confirm exec sponsor involvement before renewal", "condition", CONDITIONS[0]],
-  ["Draft a follow-up for every demo I did this week", "schedule", CADENCES[0]],
-  ["Summarise every call into the CRM", "condition", CONDITIONS[2]],
-  ["Will you do my weekly shop and walk my dog", "schedule", CADENCES[3]],
+  ["Prep my 1:1s each week", { kind: "schedule", every: 1, unit: "weeks" }],
+  ["Confirm exec sponsor involvement before renewal",
+   { kind: "condition", attr: "Days until renewal", op: "lte", val: "90" }],
+  ["Draft a follow-up for every demo I did this week", { kind: "schedule", every: 1, unit: "weeks" }],
+  ["Summarise every call into the CRM", { kind: "condition", attr: "Deal stage", op: "eq", val: "Negotiation" }],
+  ["Will you do my weekly shop and walk my dog", { kind: "schedule", every: 1, unit: "weeks" }],
 ];
 
 const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
@@ -143,11 +165,25 @@ const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
 /* ------------------------------------------------------------ the form */
 
 let picked = new Set([REPS[4]]);
-let trigger = { kind: "schedule", value: CADENCES[1] };
+let trigger = {
+  kind: "schedule",
+  every: 1, unit: "days",
+  attr: ATTRS[0][0], op: "gte", val: ATTRS[0][2],
+};
 let prompt = "";
 
-const triggerLabel = () =>
-  trigger.kind === "schedule" ? trigger.value : `When ${trigger.value.toLowerCase()}`;
+/* Reads the way ScheduleLabel does: "Every day", not "Every 1 days". */
+const triggerLabel = () => {
+  if (trigger.kind === "schedule") {
+    return trigger.every === 1
+      ? `Every ${trigger.unit.replace(/s$/, "")}`
+      : `Every ${trigger.every} ${trigger.unit}`;
+  }
+  const op = OPS.find(([k]) => k === trigger.op)[1];
+  return UNARY.includes(trigger.op)
+    ? `When ${trigger.attr.toLowerCase()} ${op}`
+    : `When ${trigger.attr.toLowerCase()} is ${op} ${trigger.val}`;
+};
 
 const form = () => `
   <header>
@@ -175,13 +211,29 @@ const form = () => `
         When something becomes true<em>Silent until it does</em>
       </button>
     </div>
-    <div class="bd-who">
-      ${(trigger.kind === "schedule" ? CADENCES : CONDITIONS)
-        .map(
-          (c) => `<button class="bd-chip${c === trigger.value ? " on" : ""}" type="button" data-bd-when="${c}">${c}</button>`,
-        )
-        .join("")}
-    </div>
+    ${
+      trigger.kind === "schedule"
+        ? `<div class="bd-row">
+             <span class="bd-word">Every</span>
+             <input class="bd-num" type="number" min="1" value="${trigger.every}" data-bd-every aria-label="How often">
+             <select class="bd-sel" data-bd-unit aria-label="Unit">
+               ${UNITS.map((u) => `<option${u === trigger.unit ? " selected" : ""}>${u}</option>`).join("")}
+             </select>
+           </div>`
+        : `<div class="bd-row">
+             <select class="bd-sel wide" data-bd-attr aria-label="What to watch">
+               ${ATTRS.map(([a]) => `<option${a === trigger.attr ? " selected" : ""}>${a}</option>`).join("")}
+             </select>
+             <select class="bd-sel" data-bd-op aria-label="Operator">
+               ${OPS.map(([k, l]) => `<option value="${k}"${k === trigger.op ? " selected" : ""}>${l}</option>`).join("")}
+             </select>
+             ${
+               UNARY.includes(trigger.op)
+                 ? ""
+                 : `<input class="bd-num" value="${trigger.val}" data-bd-val aria-label="Value">`
+             }
+           </div>`
+    }
 
     <h3>What it does</h3>
     <textarea class="bd-input" name="ask" rows="3"
@@ -195,8 +247,7 @@ const form = () => `
     <h3>Or start from one of these</h3>
     <div class="bd-eg">
       ${EXAMPLES.map(
-        ([x, k, v]) =>
-          `<button class="bd-chip" type="button" data-bd-eg="${x}" data-bd-kind2="${k}" data-bd-val="${v}">${x}</button>`,
+        ([x], i) => `<button class="bd-chip" type="button" data-bd-eg="${i}">${x}</button>`,
       ).join("")}
     </div>
   </div>`;
@@ -281,6 +332,22 @@ const openPlan = (text) => {
 
 const typed = () => (drawerEl.querySelector('[name="ask"]')?.value ?? "").trim();
 
+/* The schedule and condition controls change rather than click. Re-rendering
+   the form on each one keeps the header label honest as you set it. */
+drawerEl.addEventListener("change", (e) => {
+  const t = e.target;
+  const v = t.value;
+  if (t.matches("[data-bd-every]")) trigger = { ...trigger, every: Math.max(1, Number(v) || 1) };
+  else if (t.matches("[data-bd-unit]")) trigger = { ...trigger, unit: v };
+  else if (t.matches("[data-bd-attr]"))
+    trigger = { ...trigger, attr: v, val: (ATTRS.find(([a]) => a === v) ?? [])[2] ?? "" };
+  else if (t.matches("[data-bd-op]")) trigger = { ...trigger, op: v };
+  else if (t.matches("[data-bd-val]")) trigger = { ...trigger, val: v };
+  else return;
+  prompt = typed();
+  openForm();
+});
+
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-add-assignment]")) {
     e.preventDefault();
@@ -299,23 +366,16 @@ document.addEventListener("click", (e) => {
 
   const kind = e.target.closest("[data-bd-kind]");
   if (kind) {
-    const k = kind.dataset.bdKind;
-    trigger = { kind: k, value: k === "schedule" ? CADENCES[1] : CONDITIONS[0] };
-    prompt = typed();
-    return openForm();
-  }
-
-  const when = e.target.closest("[data-bd-when]");
-  if (when) {
-    trigger = { ...trigger, value: when.dataset.bdWhen };
+    trigger = { ...trigger, kind: kind.dataset.bdKind };
     prompt = typed();
     return openForm();
   }
 
   const eg = e.target.closest("[data-bd-eg]");
   if (eg) {
-    trigger = { kind: eg.dataset.bdKind2, value: eg.dataset.bdVal };
-    return openPlan(eg.dataset.bdEg);
+    const [text, t] = EXAMPLES[Number(eg.dataset.bdEg)];
+    trigger = { ...trigger, ...t };
+    return openPlan(text);
   }
 
   if (e.target.closest("[data-bd-plan]")) {
