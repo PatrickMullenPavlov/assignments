@@ -110,7 +110,28 @@ if (builderErr) {
       : html.length < 400 ? `ADD AN ASSIGNMENT OPENS NOTHING (${html.length} chars)`
       : `ok: Add an Assignment opens a drawer, ${html.length} chars, ${dom.counts().click} handlers`,
   );
+
+  /* Render every example, because the data being right is not the same as
+     the screen being right. "Actions we'll apply: null" got through with
+     every plan intact — the rows were transformed twice on the way out. */
+  const rendered = [];
+  for (let i = 0; i < 5; i++) {
+    const e = dom.click("[data-bd-eg]", { bdEg: String(i) });
+    const out = dom.drawerHTML();
+    if (e) rendered.push(`example ${i} throws: ${e.message}`);
+    else if (/>\s*(null|undefined)\s*</.test(out)) rendered.push(`example ${i} renders an empty line`);
+    else if (out.length < 400) rendered.push(`example ${i} renders nothing`);
+  }
+  console.log(rendered.length
+    ? "PLANS RENDER BADLY: " + rendered.join(", ")
+    : "ok: all 5 examples render a plan with no empty lines");
 }
+
+/* Every line of every plan must carry text. "Actions we'll apply: null"
+   reached the screen because the rows were normalised twice — the second
+   pass shifted the text into the wrong-flag and left the text empty. */
+const asRow = (r) => (Array.isArray(r) ? [null, r[0], r[1]] : [null, r]);
+const blank = [];
 
 /* Every tool a plan names must be one the builder knows, or the line renders
    a broken image where its icon should be. */
@@ -133,6 +154,19 @@ for (const p of [...sandbox.PLANS, sandbox.FALLBACK]) {
 console.log(badTool.length
   ? "TOOLS WITHOUT AN ICON: " + badTool.join(", ")
   : `ok: every tool named in a plan has an icon, ${iconFor.size} in the kit`);
+
+let planLines = 0;
+for (const p of [...sandbox.PLANS, sandbox.FALLBACK]) {
+  for (const row of [...p.inputs, ...p.actions.map(asRow), ...p.outputs]) {
+    planLines++;
+    const text = row[1];
+    if (text == null || String(text).trim() === "" || String(text) === "null")
+      blank.push(`${p.name}: a line with no text`);
+  }
+}
+console.log(blank.length
+  ? "PLAN LINES WITH NO TEXT: " + blank.join(", ")
+  : `ok: all ${planLines} plan lines carry text`);
 
 /* Every data-* hook a row is given must be one a handler listens for.
    Rendering proves nothing about this: a row can carry data-name forever

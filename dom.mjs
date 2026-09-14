@@ -38,9 +38,12 @@ globalThis.window = { addEventListener() {}, location: { pathname: "/", search: 
 globalThis.location = globalThis.window.location;
 globalThis.history = { replaceState() {} };
 
-/** Fire a click whose target answers to one selector. Returns what threw. */
-export function click(selector) {
-  const target = el({ closest: (s) => (s === selector ? el() : null) });
+/** Fire a click whose target answers to one selector, carrying a dataset.
+   `data` is what the handler will read off the matched element — the click
+   on an example chip needs its index, or nothing renders. */
+export function click(selector, data = {}) {
+  const hit = el({ dataset: data });
+  const target = el({ closest: (s) => (s === selector ? hit : null), dataset: data });
   for (const fn of handlers.click) {
     try {
       fn({ target, preventDefault() {} });

@@ -328,7 +328,7 @@ const planned = (p, text) => `
 
     ${group("Inputs we'll use", "inputs", p.inputs,
       `<div class="pl-add"><button class="btn sm" type="button" data-bd-add="inputs">Add an input</button></div>`)}
-    ${group("Actions we'll apply", "actions", p.actions.map(asRow))}
+    ${group("Actions we'll apply", "actions", p.actions)}
     ${group("Outputs we'll produce", "outputs", p.outputs,
       `<div class="pl-add"><button class="btn sm" type="button" data-bd-add="outputs">Add an output</button></div>`)}
     ${p.note ? `<p class="bd-said warn">${p.note}</p>` : ""}
@@ -378,7 +378,9 @@ const openPlan = (text) => {
   edit = null;
   const p = plan(text);
   /* A copy: from here on you are correcting this assignment, not the template
-     it matched. Actions normalise to the same three-part shape as the rest. */
+     it matched. Actions normalise to the same three-part shape as the rest —
+     here and nowhere else, because doing it twice turns [null, text] into
+     [null, null, text] and the text becomes the wrong-flag. */
   current = {
     ...p,
     inputs: p.inputs.map((r) => [...r]),
