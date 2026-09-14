@@ -26,12 +26,26 @@ const CLOSE = `<button class="icon-btn" type="button" data-close aria-label="Clo
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
   </button>`;
 
+/* Two kinds, not one. A schedule runs whether or not anything changed; a
+   condition is silent until something becomes true. Inside "condition" there
+   is a second distinction — a moment (a call ends, fires once and is over)
+   against a state (nobody has replied in 30 days, which stays true) — but
+   that one matters to the engine, not to the person setting it up, so it is
+   not a choice here. */
 const CADENCES = [
   "Every weekday, 6:40 am",
   "Every Monday, 6:40 am",
   "Every Tuesday",
   "Every morning",
   "Continuously",
+];
+
+const CONDITIONS = [
+  "A renewal comes inside 90 days",
+  "A deal reaches Negotiation",
+  "A call ends",
+  "Nobody has replied in 30 days",
+  "Seats pass 90%",
 ];
 
 /* What Trig can reach. Shown up front, because the alternative is finding
@@ -62,7 +76,7 @@ const PLANS = [
       ["What it gets", "Accounts with a renewal date inside 90 days", "HubSpot"],
       ["What it does to it", "Checks whether anyone with <strong>role equals Manager</strong> has replied in the last 60 days", "", true],
       ["What it makes", "A list of accounts where nobody senior is involved", ""],
-      ["Where it goes", "Into Trig, every Monday", ""],
+      ["Where it goes", "Into Trig, the day the renewal comes into range", ""],
     ],
     note: "It has guessed that an exec sponsor is anyone whose CRM role says Manager. That is almost certainly not what you meant &mdash; change the line and it will read it again.",
   },
@@ -82,7 +96,7 @@ const PLANS = [
     match: /summar\w+.*call|call.*summar|log every|crm up to date/i,
     name: "Summarise every call into the CRM",
     steps: [
-      ["What it gets", "Every customer call as it finishes", "Google Calendar, Gong &mdash; not connected", true],
+      ["What it gets", "Each customer call the moment it ends", "Google Calendar, Gong &mdash; not connected", true],
       ["What it does to it", "Writes a short summary, pulls out the next step and who owns it", ""],
       ["What it makes", "One record per call", ""],
       ["Where it goes", "Onto the account in HubSpot. Nobody reads it, which is the point", ""],
@@ -114,12 +128,14 @@ const FALLBACK = {
   note: "It could not tell what this should look at, so it has guessed the broadest thing. If that is wrong, say what it should read.",
 };
 
+/* Each carries its own trigger, because two of these are conditions and
+   leaving them on a Monday schedule would misrepresent them. */
 const EXAMPLES = [
-  "Prep my 1:1s each week",
-  "Confirm exec sponsor involvement before renewal",
-  "Draft a follow-up for every demo I did this week",
-  "Summarise every call into the CRM",
-  "Will you do my weekly shop and walk my dog",
+  ["Prep my 1:1s each week", "schedule", CADENCES[1]],
+  ["Confirm exec sponsor involvement before renewal", "condition", CONDITIONS[0]],
+  ["Draft a follow-up for every demo I did this week", "schedule", CADENCES[0]],
+  ["Summarise every call into the CRM", "condition", CONDITIONS[2]],
+  ["Will you do my weekly shop and walk my dog", "schedule", CADENCES[3]],
 ];
 
 const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
@@ -127,8 +143,11 @@ const plan = (text) => PLANS.find((p) => p.match.test(text)) ?? FALLBACK;
 /* ------------------------------------------------------------ the form */
 
 let picked = new Set([REPS[4]]);
-let cadence = CADENCES[1];
+let trigger = { kind: "schedule", value: CADENCES[1] };
 let prompt = "";
+
+const triggerLabel = () =>
+  trigger.kind === "schedule" ? trigger.value : `When ${trigger.value.toLowerCase()}`;
 
 const form = () => `
   <header>
@@ -148,10 +167,20 @@ const form = () => `
     <p class="bd-hint">One unit of work, however many people it runs for. Each gets it against their own book.</p>
 
     <h3>When it runs</h3>
+    <div class="bd-kinds">
+      <button class="bd-kind${trigger.kind === "schedule" ? " on" : ""}" type="button" data-bd-kind="schedule">
+        On a schedule<em>Runs whether or not anything changed</em>
+      </button>
+      <button class="bd-kind${trigger.kind === "condition" ? " on" : ""}" type="button" data-bd-kind="condition">
+        When something becomes true<em>Silent until it does</em>
+      </button>
+    </div>
     <div class="bd-who">
-      ${CADENCES.map(
-        (c) => `<button class="bd-chip${c === cadence ? " on" : ""}" type="button" data-bd-when="${c}">${c}</button>`,
-      ).join("")}
+      ${(trigger.kind === "schedule" ? CADENCES : CONDITIONS)
+        .map(
+          (c) => `<button class="bd-chip${c === trigger.value ? " on" : ""}" type="button" data-bd-when="${c}">${c}</button>`,
+        )
+        .join("")}
     </div>
 
     <h3>What it does</h3>
@@ -165,7 +194,10 @@ const form = () => `
 
     <h3>Or start from one of these</h3>
     <div class="bd-eg">
-      ${EXAMPLES.map((x) => `<button class="bd-chip" type="button" data-bd-eg="${x}">${x}</button>`).join("")}
+      ${EXAMPLES.map(
+        ([x, k, v]) =>
+          `<button class="bd-chip" type="button" data-bd-eg="${x}" data-bd-kind2="${k}" data-bd-val="${v}">${x}</button>`,
+      ).join("")}
     </div>
   </div>`;
 
@@ -190,7 +222,7 @@ const steps = (p) =>
 const planned = (p, text) => `
   <header>
     <div>
-      <p class="drawer-kind">${cadence} &middot; for ${[...picked].join(", ") || "nobody yet"}</p>
+      <p class="drawer-kind">${triggerLabel()} &middot; for ${[...picked].join(", ") || "nobody yet"}</p>
       <h2>${p.name}</h2>
     </div>
     ${CLOSE}
@@ -226,7 +258,7 @@ const running = (name) => `
   </header>
   <div class="drawer-body">
     <div class="bd-verdict ok">
-      <p class="bd-v-t">${cadence}, for ${[...picked].join(", ")}</p>
+      <p class="bd-v-t">${triggerLabel()}, for ${[...picked].join(", ")}</p>
       <p class="bd-v-a">It will appear in the list either way &mdash; if it finds nothing, it says so and shows you what it checked.</p>
     </div>
     <div class="canvas-actions">
@@ -265,15 +297,26 @@ document.addEventListener("click", (e) => {
     return openForm();
   }
 
+  const kind = e.target.closest("[data-bd-kind]");
+  if (kind) {
+    const k = kind.dataset.bdKind;
+    trigger = { kind: k, value: k === "schedule" ? CADENCES[1] : CONDITIONS[0] };
+    prompt = typed();
+    return openForm();
+  }
+
   const when = e.target.closest("[data-bd-when]");
   if (when) {
-    cadence = when.dataset.bdWhen;
+    trigger = { ...trigger, value: when.dataset.bdWhen };
     prompt = typed();
     return openForm();
   }
 
   const eg = e.target.closest("[data-bd-eg]");
-  if (eg) return openPlan(eg.dataset.bdEg);
+  if (eg) {
+    trigger = { kind: eg.dataset.bdKind2, value: eg.dataset.bdVal };
+    return openPlan(eg.dataset.bdEg);
+  }
 
   if (e.target.closest("[data-bd-plan]")) {
     const v = typed();

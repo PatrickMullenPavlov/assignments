@@ -1282,3 +1282,16 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .bd-verdict.ok { background: #f2faf7; border: 1px solid #cfe8df; }
 .bd-v-t { margin: 0 0 6px; font-size: var(--t-md); font-weight: 500; }
 .bd-v-a { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
+
+/* schedule or condition: the choice comes before its values */
+.bd-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.bd-kind {
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  border: 1px solid var(--rule); background: var(--white); border-radius: var(--r-md);
+  padding: 11px 13px; font: inherit; font-size: var(--t-sm); color: var(--ink); cursor: pointer;
+}
+.bd-kind em { font-style: normal; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
+.bd-kind:hover { box-shadow: var(--shadow-nav); }
+.bd-kind.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.bd-kind.on em { color: var(--ink-2); }
+@media (max-width: 560px) { .bd-kinds { grid-template-columns: 1fr; } }
