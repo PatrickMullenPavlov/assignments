@@ -86,8 +86,9 @@ const TOOL = (n) => TOOLS.find(([t]) => t === n);
    separate list tells you what is connected and not what gets used when.
    Actions carry no tool — they happen inside, on what the inputs fetched.
 
-   A trailing `true` marks a line the interpretation guessed at. That is the
-   thing a person is here to catch, so it is the only thing that shouts. */
+   A third element is the reason this line is uncertain. It both marks the
+   line and explains it, because a flag that says "something here is wrong"
+   and an explanation 400px below it are two halves of one thing. */
 const PLANS = [
   {
     match: /1:1|one to one|prep.*call|call.*prep|prep.*1:1/i,
@@ -107,31 +108,32 @@ const PLANS = [
     name: "Confirm exec sponsor involvement before renewal",
     inputs: [
       ["HubSpot", "Accounts with a renewal date inside 90 days"],
-      ["HubSpot", "Everyone at those accounts whose <strong>role says Manager</strong>", true],
+      ["HubSpot", "Everyone at those accounts whose <strong>role says Manager</strong>",
+       "Nothing in your CRM says who an exec sponsor is, so it has taken the nearest field it has. Say what it should look for instead and it will read the whole thing again."],
     ],
     actions: ["Checks whether any of them has replied in the last 60 days"],
     outputs: [["Trig", "A list of accounts where nobody senior is involved"]],
-    note: "It has decided an exec sponsor is anyone whose CRM role says Manager. That is almost certainly not what you meant &mdash; say what it should look for and it will read it again.",
   },
   {
     match: /demo|follow.?up/i,
     name: "Draft a follow-up for every demo",
     inputs: [
       ["Google Calendar", "Demos in their calendar this week"],
-      ["Gong", "The recording of each one", true],
+      ["Gong", "The recording of each one",
+       "Gong is not connected, so it cannot hear the demos. Without it this runs on calendar titles alone and the follow-ups will be generic."],
     ],
     actions: [
       "Pulls out what was asked, what was promised, and any objection raised",
       "Writes a follow-up in their own voice, from the last five they sent",
     ],
     outputs: [["Gmail", "One draft per demo, unsent"]],
-    note: "Gong is not connected, so it cannot hear the demos. Without it this runs on calendar titles alone and the follow-ups will be generic.",
     fix: "Connect Gong",
   },
   {
     match: /summar\w+.*call|call.*summar|log every|crm up to date/i,
     name: "Summarise every call into the CRM",
-    inputs: [["Gong", "Each customer call the moment it ends", true]],
+    inputs: [["Gong", "Each customer call the moment it ends",
+      "Gong is not connected. Without it there is nothing to summarise but the calendar entry."]],
     actions: [
       "Writes a short summary",
       "Pulls out the next step and who owns it",
@@ -152,10 +154,10 @@ const PLANS = [
 
 const FALLBACK = {
   name: "Your assignment",
-  inputs: [["HubSpot", "Accounts in their book, and activity on each", true]],
-  actions: [["Reads what changed since the last run", true]],
-  outputs: [["Trig", "A short summary per account", true]],
-  note: "It could not tell what this should look at, so it has guessed the broadest thing. Say what it should read and it will try again.",
+  inputs: [["HubSpot", "Accounts in their book, and activity on each",
+    "It could not tell what this should look at, so it has taken the broadest thing it has."]],
+  actions: [["Reads what changed since the last run", "A guess, for the same reason."]],
+  outputs: [["Trig", "A short summary per account", "A guess, for the same reason."]],
 };
 
 /* Each carries its own trigger, because two of these are conditions and
@@ -284,10 +286,19 @@ const icon = (name) => {
 
    Every line can be changed here. Rewriting the whole prompt to move one
    destination would be absurd, and this is the screen where you notice. */
-const line = (key, [tool, text, wrong], i) => `
-  <div class="pl-line${wrong ? " wrong" : ""}${tool === null ? " bare" : ""}">
+const ALERT = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5v.01"/></svg>`;
+
+const line = (key, [tool, text, why], i) => `
+  <div class="pl-line${why ? " wrong" : ""}${tool === null ? " bare" : ""}">
     ${tool === null ? "" : `<span class="pl-tool">${icon(tool)}<span class="pl-name">${tool}</span></span>`}
-    <span class="pl-text">${text}${wrong ? ` <span class="pl-guess">a guess</span>` : ""}</span>
+    <span class="pl-text">${text}${
+      why
+        ? ` <button class="pl-alert" type="button" data-tip="${String(why).replace(/"/g, "&quot;")}"
+             aria-label="Why this line is uncertain">${ALERT}</button>`
+        : ""
+    }</span>
     <button class="pl-edit" type="button" data-bd-step="${key}:${i}">Change</button>
   </div>`;
 
@@ -426,6 +437,33 @@ drawerEl.addEventListener("input", (e) => {
   current[key][i][1] = box.value;
   current[key][i][2] = false;
 });
+
+/* One tooltip for the whole drawer. Positioned fixed, because the drawer
+   scrolls and anything absolute inside it gets clipped at the edge. */
+const tip = document.createElement("div");
+tip.className = "pl-tip";
+tip.setAttribute("role", "tooltip");
+document.body.append(tip);
+
+const showTip = (el) => {
+  tip.textContent = el.dataset.tip;
+  tip.dataset.on = "";
+  const r = el.getBoundingClientRect();
+  const b = tip.getBoundingClientRect();
+  tip.style.left = `${Math.max(10, Math.min(r.left + r.width / 2 - b.width / 2, innerWidth - b.width - 10))}px`;
+  tip.style.top = `${r.top - b.height - 8 < 10 ? r.bottom + 8 : r.top - b.height - 8}px`;
+};
+const hideTip = () => delete tip.dataset.on;
+
+document.addEventListener("pointerover", (e) => {
+  const t = e.target.closest("[data-tip]");
+  t ? showTip(t) : hideTip();
+});
+document.addEventListener("focusin", (e) => {
+  const t = e.target.closest("[data-tip]");
+  t ? showTip(t) : hideTip();
+});
+document.addEventListener("keydown", (e) => e.key === "Escape" && hideTip());
 
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-add-assignment]")) {
