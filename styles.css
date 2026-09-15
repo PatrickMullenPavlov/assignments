@@ -353,11 +353,19 @@ html, body {
 .icon-btn:hover:not(:disabled) { color: var(--ink); background: var(--panel2); }
 .icon-btn:disabled { opacity: 0.3; cursor: default; }
 
-.drawer-body { flex-grow: 1; overflow-y: auto; padding: 4px 22px 20px; }
+.drawer-body { flex-grow: 1; overflow-y: auto; padding: 4px 22px 22px; }
+/* The commit sits at the bottom of the drawer rather than wherever the
+   content happens to end. AgentTaskDrawer does the same. */
+.drawer-foot {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 14px 22px; border-top: 1px solid var(--rule); background: var(--panel);
+}
+.foot-note { margin-left: auto; font-size: var(--t-xs); color: var(--ink-3); }
 .drawer-body h3 {
-  margin: 20px 0 8px; font-size: var(--t-xs); font-weight: 500;
+  margin: 26px 0 10px; font-size: var(--t-xs); font-weight: 500;
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
 }
+.drawer-body > h3:first-child { margin-top: 18px; }
 /* ONE list component, not one per surface. These were scoped to
    .drawer-body, so every list in a canvas fell back to the UA defaults:
    16px, disc bullets, 40px indent. That was the bad leading. */
@@ -1229,14 +1237,22 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   resize: vertical; transition: border-color .12s ease, box-shadow .12s ease;
 }
 .bd-input::placeholder { color: var(--ink-3); }
-.bd-input:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1); }
-.bd-hint { margin: 9px 0 0; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
+.bd-input:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(37, 80, 142, 0.07); }
+.bd-hint { margin: 8px 0 0; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
 
-.bd-who, .bd-eg { display: flex; flex-wrap: wrap; gap: 7px; }
-/* The examples sit between the prompt and the button, because they are how
-   most people will start and putting them after the call to action means
-   finding them only once you have already committed. */
-.bd-eg { margin-top: 14px; }
+.bd-who { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* A person chip is state you are setting. An example is a shortcut you are
+   taking. They were the same pill, which made the form look like ten
+   toggles. The examples are quieter and read as a list. */
+.bd-eg { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; margin-top: 12px; }
+.bd-eg-one {
+  border: 0; background: none; padding: 5px 8px; margin-left: -8px; border-radius: 6px;
+  font: inherit; font-size: var(--t-xs); color: var(--ink-2); cursor: pointer; text-align: left;
+}
+.bd-eg-one::before { content: "\201C"; }
+.bd-eg-one::after { content: "\201D"; }
+.bd-eg-one:hover { background: var(--panel2); color: var(--ink); }
 .bd-chip {
   border: 1px solid var(--rule); background: var(--panel2); border-radius: var(--r-pill);
   padding: 6px 12px; font: inherit; font-size: var(--t-xs); color: var(--ink-2);
@@ -1327,7 +1343,7 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
   height: 36px; padding: 0 10px; font: inherit; font-size: var(--t-sm); color: var(--ink);
   background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-md);
 }
-.bd-num { width: 72px; }
+.bd-num { width: 58px; text-align: center; padding: 0 6px; }
 .bd-sel { padding-right: 28px; }
 .bd-sel.wide { flex: 1 1 190px; min-width: 0; }
-.bd-num:focus, .bd-sel:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 3px rgba(37, 80, 142, 0.1); }
+.bd-num:focus, .bd-sel:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(37, 80, 142, 0.07); }

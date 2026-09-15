@@ -218,7 +218,7 @@ const form = () => `
         (r) => `<button class="bd-chip${picked.has(r) ? " on" : ""}" type="button" data-bd-who="${r}">${r}</button>`,
       ).join("")}
     </div>
-    <p class="bd-hint">One unit of work, however many people it runs for. Each against their own book.</p>
+    <p class="bd-hint">Each against their own book.</p>
 
     <h3>When it runs</h3>
     <div class="bd-seg" role="group">
@@ -253,17 +253,17 @@ const form = () => `
 
     <h3>What it does</h3>
     <textarea class="bd-input" name="ask" rows="2"
-      placeholder="Prep my 1:1s each week">${prompt}</textarea>
-    <p class="bd-hint">Plain English. Say where you want it to land too &mdash; in Trig, in Slack, as a draft.</p>
+      placeholder="Prep my 1:1s each week, and put them in Slack">${prompt}</textarea>
+    <p class="bd-hint">Plain English, including where it should land.</p>
 
     <div class="bd-eg">
-      ${EXAMPLES.map(([x], i) => `<button class="bd-chip" type="button" data-bd-eg="${i}">${x}</button>`).join("")}
+      ${EXAMPLES.map(([x], i) => `<button class="bd-eg-one" type="button" data-bd-eg="${i}">${x}</button>`).join("")}
     </div>
-
-    <div class="canvas-actions">
-      <button class="btn primary" type="button" data-bd-plan>Plan it out</button>
-    </div>
-  </div>`;
+  </div>
+  <footer class="drawer-foot">
+    <button class="btn primary" type="button" data-bd-plan>Plan it out</button>
+    <span class="foot-note">Nothing runs until you have read the plan</span>
+  </footer>`;
 
 /* ------------------------------------------------------------ the plan */
 
@@ -332,17 +332,16 @@ const planned = (p, text) => `
     ${group("Outputs we'll produce", "outputs", p.outputs,
       `<div class="pl-add"><button class="btn sm" type="button" data-bd-add="outputs">Add an output</button></div>`)}
     ${p.note ? `<p class="bd-said warn">${p.note}</p>` : ""}
-
-    <div class="canvas-actions">
-      ${
-        p.dead
-          ? `<button class="btn" type="button" data-bd-back>Bin it and start again</button>`
-          : `<button class="btn primary" type="button" data-bd-accept="${p.name}">Start running it</button>
-             ${p.fix ? `<button class="btn" type="button" data-bd-add="inputs">${p.fix}</button>` : ""}
-             <button class="btn" type="button" data-bd-back>Change the prompt</button>`
-      }
-    </div>
-  </div>`;
+  </div>
+  <footer class="drawer-foot">
+    ${
+      p.dead
+        ? `<button class="btn" type="button" data-bd-back>Bin it and start again</button>`
+        : `<button class="btn primary" type="button" data-bd-accept="${p.name}">Start running it</button>
+           ${p.fix ? `<button class="btn" type="button" data-bd-add="inputs">${p.fix}</button>` : ""}
+           <button class="btn" type="button" data-bd-back>Change the prompt</button>`
+    }
+  </footer>`;
 
 const running = (name) => `
   <header>
@@ -354,11 +353,11 @@ const running = (name) => `
       <p class="bd-v-t">${triggerLabel()}, for ${[...picked].join(", ")}</p>
       <p class="bd-v-a">It will appear in the list either way &mdash; if it finds nothing, it says so and shows you what it checked.</p>
     </div>
-    <div class="canvas-actions">
-      <button class="btn primary" type="button" data-close>Back to assignments</button>
-      <button class="btn" type="button" data-bd-back>Add another</button>
-    </div>
-  </div>`;
+  </div>
+  <footer class="drawer-foot">
+    <button class="btn primary" type="button" data-close>Back to assignments</button>
+    <button class="btn" type="button" data-bd-back>Add another</button>
+  </footer>`;
 
 /* --------------------------------------------------------------- wiring */
 
