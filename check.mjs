@@ -89,6 +89,28 @@ for (const k of Object.keys(LOGS)) if (!/data-close/.test(CANVAS.log(k))) wrong.
 console.log(wrong.length ? "WRONG SURFACE: " + wrong.join(", ")
   : "ok: no pane renders drawer chrome, and every drawer can be closed");
 
+/* Every run carries the three bands, and the figure is derived from what the
+   run produced rather than typed beside it — so a run that finds less claims
+   less, and nobody can quietly inflate it. */
+const { PROVENANCE, provenance } = await import("/Users/patrick/Desktop/trig-prototype/provenance.js");
+const provGaps = [];
+for (const name of Object.keys(RUNS)) {
+  const p = PROVENANCE[name];
+  if (!p) { provGaps.push(`${name} has none`); continue; }
+  if (!p.from?.length) provGaps.push(`${name}: nothing it was built from`);
+  if (!p.checked?.length) provGaps.push(`${name}: nothing it checked`);
+  const { each, units } = p.cost ?? {};
+  if (typeof each !== "number" || typeof units !== "number")
+    provGaps.push(`${name}: the cost is not computed`);
+  const html = provenance(name);
+  if (!/prov-figure/.test(html)) provGaps.push(`${name}: renders no figure`);
+}
+const totalHours = Object.values(PROVENANCE)
+  .reduce((n, p) => n + (p.cost.each * p.cost.units) / 60, 0);
+console.log(provGaps.length
+  ? "PROVENANCE GAPS: " + provGaps.join(", ")
+  : `ok: all ${Object.keys(RUNS).length} runs show what they were built from, ${totalHours.toFixed(0)} hours across them`);
+
 /* The modules that touch a DOM were invisible here: importing one throws
    without a document, so a ReferenceError inside a template survived two
    commits while every other check passed. Load them under a stub and fire

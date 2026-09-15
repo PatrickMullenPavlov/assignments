@@ -119,6 +119,7 @@ const ASSIGNMENTS = [
 
 import { onFilterChange } from "./filter.js";
 import { RUNS, CANVAS, resolve } from "./stepped.js";
+import { provenance } from "./provenance.js";
 import { SETS } from "./cohort.js";
 import { showDrawer, hideDrawer } from "./drawer.js";
 
@@ -218,10 +219,13 @@ function stepped(name) {
   const { single, hasReport, current } = r;
   openItem = r.openItem;
 
+  /* Every canvas gets the same three bands under it: what the run was built
+     from, what it checked, and what it would have cost a person. A subject
+     opened for depth does not — that is one account, not the run. */
   const pane = openSubject
     ? CANVAS[openSubject.kind + "Pane"](openSubject.key)
     : current
-    ? CANVAS[current.shape](current)
+    ? CANVAS[current.shape](current) + provenance(name)
     : "";
 
   history.replaceState(null, "", "?open=" + encodeURIComponent(name));

@@ -1368,3 +1368,20 @@ section.full > .table, section.full > .reports-grid { padding-top: 0; }
 .bd-sel { padding-right: 28px; }
 .bd-sel.wide { flex: 1 1 190px; min-width: 0; }
 .bd-num:focus, .bd-sel:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(37, 80, 142, 0.07); }
+
+/* ------------------------------------------------- what a run was built on
+   Three bands under whatever the canvas showed. This lived on one shape as
+   three of its properties; it is the most useful thing on the screen and the
+   other eight assignments had nothing like it. */
+.prov-bands {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0 32px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--rule);
+}
+.prov-band .canvas-h { margin-top: 0; }
+.prov-figure {
+  margin: 0; font-size: var(--t-figure); font-weight: 500; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.prov-sum { margin: 8px 0 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--ink-2); }
+.prov-caveat { margin: 8px 0 0; font-size: var(--t-xs); line-height: var(--lh-xs); color: var(--ink-3); }
+@media (max-width: 900px) { .prov-bands { gap: 0; } .prov-band + .prov-band { margin-top: 24px; } }
