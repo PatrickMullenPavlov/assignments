@@ -142,7 +142,7 @@ const PLANS = [
   {
     match: /shop|dog|walk|dinner|laundry/i,
     name: "Weekly shop",
-    inputs: [["", "Nothing. None of the tools it has hold a shopping list or a dog", true]],
+    inputs: [[null, "Nothing. None of the tools it has hold a shopping list or a dog"]],
     actions: [],
     outputs: [],
     note: "Trig has HubSpot, Salesforce, a calendar, a mailbox and Slack. None of those will do this. Nothing stopped you asking &mdash; you can see it cannot, so bin it.",
@@ -287,7 +287,7 @@ const icon = (name) => {
 const line = (key, [tool, text, wrong], i) => `
   <div class="pl-line${wrong ? " wrong" : ""}${tool === null ? " bare" : ""}">
     ${tool === null ? "" : `<span class="pl-tool">${icon(tool)}<span class="pl-name">${tool}</span></span>`}
-    <span class="pl-text">${text}</span>
+    <span class="pl-text">${text}${wrong ? ` <span class="pl-guess">a guess</span>` : ""}</span>
     <button class="pl-edit" type="button" data-bd-step="${key}:${i}">Change</button>
   </div>`;
 
